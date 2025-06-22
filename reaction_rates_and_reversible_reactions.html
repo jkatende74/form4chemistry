@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Rates & Reversible Reactions: An Interactive Guide</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathJax Configuration and CDN -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Internal CSS for Layout Control and Styling -->
+    <style>
+        /* Prevents the main browser window from scrolling */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a8a8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Style for the active link in the side navigation */
+        .side-nav-link.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 4px solid #ffffff;
+        }
+
+        /* Custom styles for details/summary to create accordion-like elements */
+        details > summary {
+            list-style: none; /* Remove default marker */
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background-color: #f3f4f6; /* gray-100 */
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: start; /* Align to top to fix layout with LaTeX */
+            transition: background-color 0.2s;
+        }
+
+        details > summary:hover {
+             background-color: #e5e7eb; /* gray-200 */
+        }
+
+        details > summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 300;
+            transition: transform 0.3s ease-in-out;
+            margin-left: 1rem; /* Space between text and icon */
+            flex-shrink: 0;
+        }
+        
+        details[open] > summary::after {
+            transform: rotate(45deg);
+        }
+
+        details .answer-content {
+            padding: 1rem;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            margin-top: -0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen overflow-hidden bg-gray-100">
+        <!-- Side Navigation Menu -->
+        <aside id="side-menu" class="fixed top-0 left-0 z-40 w-64 h-full bg-gray-800 text-white transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0">
+            <div class="p-5 border-b border-gray-700">
+                <h1 class="text-2xl font-bold">Reaction Rates</h1>
+                <p class="text-sm text-gray-400">Chemistry Guide</p>
+            </div>
+            <nav id="main-nav" class="p-4 overflow-y-auto h-[calc(100%-80px)]">
+                <ul class="space-y-1">
+                    <!-- Navigation links will be dynamically populated and handled by JS -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Overlay for mobile view when side menu is open -->
+        <div id="menu-overlay" class="fixed inset-0 z-30 hidden bg-black bg-opacity-50 md:hidden"></div>
+
+        <!-- Main Content Area -->
+        <div class="flex flex-col flex-1 w-full h-full overflow-hidden">
+            <!-- Header: Hamburger Menu and Breadcrumbs -->
+            <header class="flex items-center justify-between flex-shrink-0 p-4 bg-white border-b border-gray-200">
+                <button id="hamburger-btn" class="p-2 text-gray-600 rounded-md md:hidden" aria-label="Open Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <nav id="breadcrumbs" class="text-sm text-gray-500 font-medium">
+                    <!-- Breadcrumbs will be dynamically populated by JS -->
+                </nav>
+            </header>
+
+            <!-- Content Slides Wrapper -->
+            <main id="content-wrapper" class="flex-1 p-4 overflow-y-auto md:p-6 lg:p-8">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <!-- Slides will be injected here from the slidesData object -->
+                </div>
+            </main>
+            
+            <!-- Navigation Buttons Footer -->
+            <footer class="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+                <div class="flex justify-between max-w-4xl mx-auto">
+                    <button id="prev-btn" class="px-6 py-2 font-semibold text-white bg-gray-500 rounded-lg shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <button id="next-btn" class="px-6 py-2 font-semibold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const slidesData = [
+                {
+                    title: "Introduction to Reaction Rates",
+                    content: `
+                        <p class="text-lg mb-4">The study of chemical reactions involves understanding both the transformation of reactants into products and the <strong>speed</strong> at which these transformations occur. This speed is known as the reaction rate.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Defining and Measuring Reaction Rates</h3>
+                        <p class="mb-4">The <strong>rate of a reaction</strong> is formally defined as a measure of how much of the reactants are consumed or how much of the products are formed per unit time.</p>
+                        <p class="mb-4">To determine the rate, we must monitor an observable property that changes with time, such as:</p>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700">
+                            <li>Change in mass of a reactant or product.</li>
+                            <li>Volume of gas produced if a product is gaseous.</li>
+                            <li>Changes in the intensity of color if a substance is colored.</li>
+                        </ul>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border">
+                            <h4 class="font-semibold text-gray-800">Graphical Representation</h4>
+                            <p>Plotting concentration vs. time shows that reaction rates are often not constant. The rate at any given moment (the instantaneous rate) is the slope of the tangent to the curve at that point.</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Collision Theory & Activation Energy",
+                    content: `
+                        <p class="text-lg mb-4">For a reaction to occur, reactant particles must first collide. This is the central idea of the <strong>Collision Theory</strong>. However, not every collision leads to a reaction.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Conditions for an Effective Collision</h3>
+                        <p class="mb-4">For a collision to be effective and form products, two conditions must be met:</p>
+                        <ol class="list-decimal pl-5 space-y-2 text-gray-700">
+                            <li><strong>Sufficient Energy:</strong> The colliding particles must possess a certain minimum kinetic energy, known as the <strong>activation energy (Ea)</strong>. This is the energy barrier that must be overcome.</li>
+                            <li><strong>Correct Orientation:</strong> The particles must collide in the correct spatial orientation to allow bonds to break and new bonds to form.</li>
+                        </ol>
+                        <div class="mt-6 text-center bg-gray-100 p-6 rounded-lg">
+                            <p class="font-semibold">[Energy Profile Diagram]</p>
+                            <p class="text-sm text-gray-600 mt-2">An energy profile diagram shows reactants needing to overcome the activation energy (Ea) peak to become products. The overall energy difference between reactants and products is the enthalpy change (\\(\\Delta H\\)).</p>
+                        </div>
+                        <p class="mt-4">Factors that influence reaction rates do so by changing the frequency of collisions or, more importantly, the fraction of collisions that have energy greater than or equal to the activation energy.</p>
+                    `
+                },
+                {
+                    title: "Factors Affecting Rates",
+                    content: `
+                        <p class="mb-4">The rate of a chemical reaction can be controlled by altering several key factors. Understanding these factors allows for the manipulation of reaction speeds in both laboratory and industrial settings.</p>
+                        <div class="space-y-4">
+                            <p><strong>1. Concentration:</strong> Higher concentration of reactants leads to more particles per unit volume, increasing the frequency of collisions and thus the reaction rate.</p>
+                            <p><strong>2. Temperature:</strong> Increasing the temperature increases the kinetic energy of particles. This not only increases collision frequency but, more importantly, dramatically increases the percentage of collisions that have sufficient energy to overcome the activation energy barrier.</p>
+                            <p><strong>3. Surface Area:</strong> For heterogeneous reactions (reactants in different phases), increasing the surface area of a solid reactant (e.g., by grinding it into a powder) exposes more particles to the other reactant, increasing collision frequency and the reaction rate.</p>
+                            <p><strong>4. Catalysts:</strong> A catalyst provides an alternative reaction pathway with a lower activation energy. This allows a greater fraction of collisions to be effective, speeding up the reaction without the catalyst itself being consumed.</p>
+                            <p><strong>5. Light:</strong> Photochemical reactions are initiated or accelerated by light, which provides the necessary activation energy to the reactant particles.</p>
+                            <p><strong>6. Pressure (for gases):</strong> Increasing the pressure of a gaseous system forces the reactant particles closer together, increasing their concentration and leading to more frequent collisions and a faster reaction rate.</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Reversible Reactions & Equilibrium",
+                    content: `
+                        <p class="mb-4">Many chemical reactions do not proceed in only one direction. A <strong>reversible reaction</strong> is one that can proceed in both the forward and backward directions, symbolized by \\(\\rightleftharpoons\\).</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Dynamic Equilibrium</h3>
+                        <p class="mb-4">When a reversible reaction occurs in a <strong>closed system</strong>, it can reach a state of <strong>dynamic equilibrium</strong>. This is a state of balance where:</p>
+                        <ul class="list-disc pl-5 space-y-2 text-gray-700">
+                            <li>The rate of the forward reaction is exactly equal to the rate of the reverse reaction.</li>
+                            <li>The concentrations of all reactants and products remain constant.</li>
+                            <li>Macroscopically, the reaction appears to have stopped, but microscopically, both forward and reverse reactions are still occurring continuously.</li>
+                        </ul>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border">
+                            <h4 class="font-semibold text-gray-800">Example: Hydrated Copper(II) Sulphate</h4>
+                            <p>Heating blue hydrated copper(II) sulphate turns it into white anhydrous copper(II) sulphate. Adding water reverses the reaction, restoring the blue color.</p>
+                            <p class="font-mono text-sm mt-2">\\( \\ce{CuSO4.5H2O(s) <=> CuSO4(s) + 5H2O(l)} \\)</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Le Chatelier's Principle",
+                    content: `
+                        <p class="mb-4 text-lg">Le Chatelier's Principle provides a way to predict how a system at equilibrium will respond to a change in conditions.</p>
+                        <div class="p-4 border-2 border-blue-500 rounded-lg bg-blue-50">
+                            <h4 class="font-bold text-lg mb-2 text-blue-800">Principle Statement</h4>
+                            <p>When a change in conditions (a stress) is applied to a system in equilibrium, the system will shift in a direction that opposes the change. </p>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Effect of Changes</h3>
+                        <ul class="list-disc pl-5 space-y-3 text-gray-700">
+                           <li><strong>Concentration:</strong> If a substance's concentration is increased, the equilibrium shifts to consume it. If it's decreased, the equilibrium shifts to produce more of it.</li>
+                           <li><strong>Pressure (for gases):</strong> If pressure is increased, the equilibrium shifts to the side with fewer moles of gas. If pressure is decreased, it shifts to the side with more moles of gas.</li>
+                           <li><strong>Temperature:</strong> If temperature is increased, the equilibrium shifts in the endothermic direction (to absorb heat). If temperature is decreased, it shifts in the exothermic direction (to release heat).</li>
+                           <li><strong>Catalyst:</strong> A catalyst speeds up the attainment of equilibrium but has <strong>no effect</strong> on the position of the equilibrium itself.</li>
+                        </ul>
+                    `
+                },
+                {
+                    title: "Industrial Applications",
+                    content: `
+                        <p class="mb-6">The principles of equilibrium are crucial for optimizing industrial processes to maximize product yield cost-effectively.</p>
+                        <div class="space-y-6">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">The Haber Process: Ammonia Synthesis</h4>
+                                <p class="font-mono text-sm mb-2">\\( \\ce{N2(g) + 3H2(g) <=> 2NH3(g)} \\quad \\Delta H = -92 \\text{ kJ/mol} \\)</p>
+                                <p><strong>Optimum Conditions:</strong></p>
+                                <ul class="list-disc pl-5 text-sm space-y-1">
+                                    <li><strong>Pressure:</strong> High pressure (~200 atm) favors the product side (fewer moles).</li>
+                                    <li><strong>Temperature:</strong> A compromise temperature (~450°C) is used. Lower temperatures give a higher yield but are too slow; higher temperatures are faster but give a lower yield.</li>
+                                    <li><strong>Catalyst:</strong> An iron catalyst is used to speed up the reaction.</li>
+                                    <li><strong>Product Removal:</strong> Ammonia is liquefied and removed, shifting the equilibrium to the right to produce more product.</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">The Contact Process: Sulphuric Acid</h4>
+                                <p class="font-mono text-sm mb-2">\\( \\ce{2SO2(g) + O2(g) <=> 2SO3(g)} \\quad \\Delta H = -197 \\text{ kJ/mol} \\)</p>
+                                <p><strong>Optimum Conditions:</strong></p>
+                                <ul class="list-disc pl-5 text-sm space-y-1">
+                                    <li><strong>Pressure:</strong> Atmospheric pressure is sufficient as the conversion rate is already high (~96%).</li>
+                                    <li><strong>Temperature:</strong> A compromise temperature (~450°C) balances rate and yield.</li>
+                                    <li><strong>Catalyst:</strong> Vanadium(V) oxide (\\(V_2O_5\\)) is used to increase the reaction rate.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Key Experiments",
+                    content: `
+                        <p class="mb-6">This section summarizes key experiments used to investigate the factors affecting reaction rates.</p>
+                        <div class="space-y-6">
+                             <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">1. Effect of Concentration</h4>
+                                <p><strong>Objective:</strong> To investigate how reactant concentration affects reaction rate.</p>
+                                <p><strong>Procedure:</strong> React magnesium ribbon with different concentrations of an acid (e.g., HCl). Measure the time taken for the magnesium to disappear or measure the volume of hydrogen gas produced over time.</p>
+                                <p><strong>Conclusion:</strong> The reaction is faster at higher concentrations due to more frequent collisions.</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">2. Effect of Temperature</h4>
+                                <p><strong>Objective:</strong> To investigate how temperature affects reaction rate.</p>
+                                <p><strong>Procedure:</strong> React sodium thiosulphate with hydrochloric acid at different temperatures. Measure the time taken for the sulphur precipitate to obscure a cross placed underneath the beaker.</p>
+                                <p><strong>Conclusion:</strong> The reaction rate increases significantly with temperature, roughly doubling for every 10°C rise.</p>
+                            </div>
+                             <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">3. Effect of Surface Area</h4>
+                                <p><strong>Objective:</strong> To show the effect of surface area in heterogeneous reactions.</p>
+                                <p><strong>Procedure:</strong> React equal masses of marble chips and powdered marble with hydrochloric acid. Measure the volume of carbon dioxide gas produced over time.</p>
+                                <p><strong>Conclusion:</strong> The powdered marble reacts much faster due to its larger surface area, which allows for more frequent collisions.</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">4. Effect of a Catalyst</h4>
+                                <p><strong>Objective:</strong> To demonstrate the action of a catalyst.</p>
+                                <p><strong>Procedure:</strong> Compare the rate of decomposition of hydrogen peroxide (\\(\\ce{H2O2}\\)) with and without manganese(IV) oxide (\\(\\ce{MnO2}\\)) by measuring the volume of oxygen gas evolved.</p>
+                                <p><strong>Conclusion:</strong> \\(\\ce{MnO2}\\) acts as a catalyst, dramatically increasing the rate of decomposition.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Revision Questions",
+                    content: `
+                        <p class="mb-6">Test your understanding of the chapter with these revision questions. Click on a question to reveal the answer.</p>
+                        <div class="space-y-4">
+                            <!-- Questions will be generated here by JS -->
+                        </div>
+                    `
+                }
+            ];
+
+            const revisionQuestions = [
+                // Questions 1-35 (Reaction Rates and Chemical Kinetics)
+                { q: "Define the rate of a chemical reaction.", a: "The rate of a reaction is a measure of how much of the reactants are consumed or how much of the products are formed per unit time." },
+                { q: "Provide examples of reactions that are virtually instantaneous and those that occur very slowly.", a: "Instantaneous: Precipitation of barium sulphate. Very slow: Rusting of iron." },
+                { q: "List three observable properties that can be monitored to determine a reaction rate.", a: "1. Change in mass of a reactant or product. 2. Volume of gas produced. 3. Changes in the intensity of color." },
+                { q: "Explain how the progress of a reaction can be visualized graphically.", a: "By plotting the concentration of reactants and products against time. Reactant concentration curves slope downwards, while product concentration curves slope upwards." },
+                { q: "What does the slope of a concentration-time curve represent?", a: "The slope represents the rate of the reaction. The instantaneous rate is the slope of the tangent to the curve at a specific point." },
+                { q: "Why is understanding reaction rates important in industrial chemistry?", a: "Controlling reaction rates is essential for optimizing production processes, ensuring efficiency, and maximizing profit." },
+                { q: "State the central tenet of the Collision Theory.", a: "For a chemical reaction to occur, reactant particles must first collide." },
+                { q: "Identify the two main conditions for an effective collision.", a: "1. The colliding particles must possess a minimum amount of kinetic energy (activation energy). 2. They must collide with the correct orientation." },
+                { q: "Define Activation Energy (Ea).", a: "Activation Energy (Ea) is the minimum kinetic energy that colliding particles must possess for a reaction to occur." },
+                { q: "How does an energy profile diagram represent activation energy?", a: "It shows an energy barrier or 'hill' that reactants must overcome to be converted into products." },
+                { q: "Differentiate between activation energy (Ea) and enthalpy change (\\(\\Delta H\\)).", a: "Ea is a kinetic barrier dictating reaction speed. \\(\\Delta H\\) is the overall energy difference between products and reactants, determining thermodynamic favorability." },
+                { q: "Why might a very exothermic reaction proceed very slowly?", a: "If its activation energy is very high, only a small fraction of collisions will have enough energy to overcome the barrier." },
+                { q: "Why is the orientation of colliding particles critical?", a: "Even with sufficient energy, an incorrect orientation will not lead to the necessary bond-breaking and bond-forming, so no reaction occurs." },
+                { q: "How do factors influencing reaction rates exert their effects according to collision theory?", a: "By altering either the total frequency of collisions or the fraction of these collisions that are effective (have \\(E \\ge Ea\\))." },
+                { q: "Describe how concentration affects the rate of a chemical reaction.", a: "Higher concentration leads to more particles per unit volume, increasing collision frequency and thus increasing the reaction rate." },
+                { q: "Explain the mechanism for the effect of concentration on reaction rate.", a: "More particles in a given volume lead to a higher frequency of collisions, which increases the frequency of successful collisions." },
+                { q: "Why does the rate of a reaction typically slow down over time?", a: "As reactants are consumed, their concentrations decrease, leading to fewer collisions and a slower rate." },
+                { q: "How can reaction rate be expressed using time?", a: "It can be expressed as the reciprocal of the time taken (1/t) for a specific observable change." },
+                { q: "Describe Experiment 3.3 and its key finding on temperature.", a: "The experiment reacts sodium thiosulphate and HCl at different temperatures. It finds that the reaction is faster at higher temperatures." },
+                { q: "What is the general rule of thumb for reaction rate and temperature?", a: "The rate of reaction approximately doubles for every 10°C rise in temperature." },
+                { q: "Explain the mechanism behind temperature's effect on reaction rates.", a: "Increasing temperature increases particles' kinetic energy, leading to more frequent and, more importantly, more energetic collisions, increasing the fraction of effective collisions." },
+                { q: "Identify a potential source of error in the 'disappearing cross' experiment.", a: "Subjectivity in judging the exact moment the cross becomes invisible, which can vary between observers." },
+                { q: "In which type of reactions is surface area a significant factor?", a: "In heterogeneous reactions, where reactants are in different phases (e.g., solid-liquid)." },
+                { q: "Describe Experiment 3.4 and its observation on surface area.", a: "It compares the reaction of HCl with marble chips vs. powdered marble. The powdered marble reacts much faster." },
+                { q: "Explain the mechanism by which increasing surface area increases reaction rate.", a: "Grinding a solid increases its total surface area, providing more sites for collision between reactants, thus increasing the collision frequency and reaction rate." },
+                { q: "Does altering surface area affect the total yield of products? Explain.", a: "No, it only affects the rate. The total yield is determined by the amount of the limiting reactant." },
+                { q: "Define a catalyst.", a: "A catalyst is a substance that alters the rate of a chemical reaction without being consumed or chemically changed by the end of the reaction." },
+                { q: "How do catalysts increase reaction rates?", a: "They provide an alternative reaction pathway with a lower activation energy (Ea)." },
+                { q: "Describe Experiment 3.5 on hydrogen peroxide decomposition.", a: "It shows that manganese(IV) oxide (\\(MnO_2\\)) dramatically increases the decomposition rate of \\(H_2O_2\\), as seen by rapid oxygen evolution." },
+                { q: "What observation confirms \\(MnO_2\\) is a catalyst in Experiment 3.5?", a: "The mass of \\(MnO_2\\) recovered at the end is the same as the initial mass." },
+                { q: "Why are solid catalysts often used in powdered form?", a: "To increase their surface area, providing more active sites for the reaction." },
+                { q: "List two industrial catalysts and their processes.", a: "1. Iron in the Haber process (ammonia synthesis). 2. Vanadium(V) oxide in the Contact process (sulphuric acid production)." },
+                { q: "How does light influence photochemical reactions?", a: "Light provides the necessary activation energy to energize reactant particles, initiating the reaction." },
+                { q: "Describe Experiment 3.6 on silver bromide.", a: "It shows that silver bromide decomposes faster when exposed to more intense light, turning grey more quickly in sunlight than in shade." },
+                { q: "Name three important photochemical reactions.", a: "1. Photography (decomposition of silver halides). 2. Photosynthesis. 3. The reaction between chlorine and hydrogen in UV light." },
+                // Questions 36-70 (Reversible Reactions and Chemical Equilibrium)
+                { q: "Distinguish between an irreversible and a reversible reaction.", a: "An irreversible reaction proceeds in one direction. A reversible reaction can proceed in both forward and backward directions." },
+                { q: "How are reversible reactions represented in equations?", a: "With double arrows (\\(\\rightleftharpoons\\) or \\(\\Leftrightarrow\\))." },
+                { q: "Explain why the dehydration of copper(II) sulphate is a reversible reaction.", a: "Heating blue hydrated \\(\\ce{CuSO4.5H2O}\\) forms white anhydrous \\(\\ce{CuSO4}\\). Adding water back restores the blue hydrated form." },
+                { q: "What is a closed system, and why is it critical for equilibrium?", a: "A closed system is one where no matter can enter or leave. It's critical because if products escape, the reverse reaction cannot occur to establish equilibrium." },
+                { q: "Define dynamic equilibrium.", a: "A state in a reversible reaction where the rate of the forward reaction equals the rate of the reverse reaction, and macroscopic properties are constant." },
+                { q: "Explain how dynamic equilibrium is reached using the \\(NH_4Cl\\) example.", a: "Heating \\(NH_4Cl\\) produces \\(NH_3\\) and \\(HCl\\). As their concentrations increase, they start recombining. Equilibrium is reached when the rate of decomposition equals the rate of recombination." },
+                { q: "At equilibrium, are reactant and product concentrations necessarily equal?", a: "No, they are just constant. Their relative amounts are determined by the equilibrium constant, K." },
+                { q: "How does an acid-base indicator visually demonstrate dynamic equilibrium?", a: "Adding an acid or base shifts the indicator's equilibrium (e.g., \\(HIn \\rightleftharpoons H^+ + In^-\\)), causing a color change as the system responds to the disturbance." },
+                { q: "State Le Chatelier's Principle.", a: "When a change in conditions is applied to a system in equilibrium, the system moves so as to oppose that change." },
+                { q: "How does the principle predict the system's response to stress?", a: "It predicts the system will adjust to a new equilibrium position in a way that partially counteracts the imposed change." },
+                { q: "What is the effect of increasing a reactant's concentration on equilibrium?", a: "The equilibrium will shift to the right, towards the products, to consume the added reactant." },
+                { q: "What is the effect of decreasing a product's concentration on equilibrium?", a: "The equilibrium will shift to the right, towards the products, to replace the removed product." },
+                { q: "Describe the bromine water experiment illustrating concentration changes.", a: "Adding base (removes \\(H^+\\)) shifts the equilibrium right, fading the color. Adding acid (adds \\(H^+\\)) shifts it left, intensifying the color." },
+                { q: "How does adding a base to bromine water cause a color change?", a: "The base removes \\(H^+\\), causing the equilibrium to shift right to produce more \\(H^+\\), consuming the yellow-orange \\(Br_2\\) and making the solution colorless." },
+                { q: "How does adding an acid to bromine water cause a color change?", a: "The acid increases \\([H^+]\\), shifting the equilibrium left to consume \\(H^+\\), producing more yellow-orange \\(Br_2\\) and intensifying the color." },
+                { q: "Explain the shift in the chromate/dichromate equilibrium.", a: "Adding acid shifts it right (forming orange \\(\\ce{Cr2O7^{2-}}\\) ). Adding base shifts it left (forming yellow \\(\\ce{CrO4^{2-}}\\) )." },
+                { q: "For gaseous reactions, how does increasing pressure affect equilibrium?", a: "The equilibrium shifts towards the side with the fewer moles of gas." },
+                { q: "Using \\( \\ce{2NO2(g) <=> N2O4(g)} \\), explain the effect of pressure.", a: "Increasing pressure shifts it right (to \\(\\ce{N2O4}\\), 1 mole), making it paler. Decreasing pressure shifts it left (to \\(\\ce{NO2}\\), 2 moles), making it darker." },
+                { q: "What is the effect of pressure on an equilibrium with no change in moles of gas?", a: "Pressure has no effect on the position of equilibrium." },
+                { q: "How does pressure affect the rate at which equilibrium is attained?", a: "Increasing pressure increases the rate at which equilibrium is reached because it increases reactant concentrations." },
+                { q: "Describe the experiment showing temperature's effect on the \\(\\ce{N2O4 <=> 2NO2}\\) equilibrium.", a: "Heating the mixture causes it to darken (shifts right to endothermic side). Cooling it causes it to become paler (shifts left to exothermic side)." },
+                { q: "How does an increase in temperature affect an equilibrium system?", a: "The equilibrium shifts in the endothermic direction (the direction that absorbs heat)." },
+                { q: "How does a decrease in temperature affect an equilibrium system?", a: "The equilibrium shifts in the exothermic direction (the direction that releases heat)." },
+                { q: "Why is temperature's effect on the equilibrium constant (K) unique?", a: "Temperature is the only factor that changes the actual value of K. Other factors shift the position but K remains constant." },
+                { q: "Explain why a catalyst has no effect on the position of equilibrium.", a: "A catalyst lowers the activation energy for both the forward and reverse reactions equally, so it speeds up both rates by the same factor, not changing the equilibrium position." },
+                { q: "What is the primary goal of applying equilibrium principles in industry?", a: "To maximize the yield of desired products efficiently and economically by finding the optimum conditions." },
+                { q: "State the reaction for the Haber Process.", a: "\\( \\ce{N2(g) + 3H2(g) <=> 2NH3(g)} \\quad \\Delta H = -92 \\text{ kJ/mol} \\)" },
+                { q: "Explain the temperature compromise in the Haber Process.", a: "A compromise of ~450°C is used. Low temp gives high yield but is slow; high temp is fast but gives low yield." },
+                { q: "Why is high pressure used in the Haber Process?", a: "To shift the equilibrium to the right (fewer moles of gas), increasing the yield of ammonia." },
+                { q: "What is the role of the iron catalyst in the Haber Process?", a: "To increase the rate at which equilibrium is attained, making the process economically viable." },
+                { q: "How does continuous removal of ammonia maximize yield?", a: "Removing the product causes the equilibrium to shift to the right to replace it, thus increasing the overall conversion of reactants to product." },
+                { q: "State the key reversible step in the Contact Process.", a: "\\( \\ce{2SO2(g) + O2(g) <=> 2SO3(g)} \\quad \\Delta H = -197 \\text{ kJ/mol} \\)" },
+                { q: "Why is the Contact Process often run at atmospheric pressure?", a: "Because a very high conversion rate (~96%) is already achieved at this pressure with a catalyst, making expensive high-pressure equipment unnecessary." }
+            ];
+
+
+            // --- DOM Elements ---
+            const contentWrapper = document.getElementById('content-wrapper').querySelector('.max-w-4xl');
+            const mainNav = document.getElementById('main-nav').querySelector('ul');
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const sideMenu = document.getElementById('side-menu');
+            const menuOverlay = document.getElementById('menu-overlay');
+
+            let currentSlide = 0;
+
+            // --- Functions ---
+
+            /**
+             * Initializes the application by creating slides and navigation.
+             */
+            function initialize() {
+                // Create slide elements from data
+                slidesData.forEach((slide, index) => {
+                    const slideElement = document.createElement('section');
+                    slideElement.id = `slide-${index}`;
+                    slideElement.className = 'slide bg-white p-6 md:p-8 rounded-lg shadow-lg';
+                    slideElement.style.display = 'none'; // Hide all initially
+                    
+                    const titleElement = document.createElement('h2');
+                    titleElement.className = 'mb-6 text-3xl font-bold text-gray-800 border-b pb-3';
+                    titleElement.innerHTML = slide.title;
+                    
+                    const contentElement = document.createElement('div');
+                    contentElement.className = 'prose max-w-none text-gray-700 leading-relaxed';
+                    contentElement.innerHTML = slide.content;
+
+                    slideElement.appendChild(titleElement);
+                    slideElement.appendChild(contentElement);
+                    contentWrapper.appendChild(slideElement);
+
+                    // If it's the revision questions slide, populate the questions
+                    if (slide.title === "Revision Questions") {
+                        const questionsContainer = slideElement.querySelector('.space-y-4');
+                        revisionQuestions.forEach((item, qIndex) => {
+                            const detail = document.createElement('details');
+                            const summary = document.createElement('summary');
+                            summary.innerHTML = `<div class="flex-grow">${qIndex + 1}. ${item.q}</div>`;
+                            
+                            const answerDiv = document.createElement('div');
+                            answerDiv.className = 'answer-content';
+                            answerDiv.innerHTML = `<p>${item.a}</p>`;
+
+                            detail.appendChild(summary);
+                            detail.appendChild(answerDiv);
+                            questionsContainer.appendChild(detail);
+                        });
+                    }
+                });
+
+                // Create navigation links
+                slidesData.forEach((slide, index) => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = slide.title;
+                    a.dataset.index = index;
+                    a.className = 'side-nav-link block p-3 rounded-md transition-colors duration-200 hover:bg-gray-700';
+                    li.appendChild(a);
+                    mainNav.appendChild(li);
+                });
+
+                showSlide(0, true); // Pass true for initial load
+
+                setupEventListeners();
+            }
+
+            /**
+             * Renders MathJax content safely.
+             */
+            function renderMath(element) {
+                if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                    window.MathJax.startup.promise.then(() => {
+                        window.MathJax.typesetPromise(element ? [element] : []);
+                    }).catch((err) => console.error('MathJax typeset failed: ', err));
+                }
+            }
+
+
+            /**
+             * Displays a specific slide and updates UI elements.
+             */
+            function showSlide(index, isInitialLoad = false) {
+                if (index < 0 || index >= slidesData.length) return;
+
+                currentSlide = index;
+                
+                document.querySelectorAll('.slide').forEach(slide => {
+                    slide.style.display = 'none';
+                });
+                
+                const slideToShow = document.getElementById(`slide-${index}`);
+                slideToShow.style.display = 'block';
+                document.getElementById('content-wrapper').scrollTop = 0;
+                
+                renderMath(slideToShow);
+
+                updateUI();
+            }
+            
+            function updateUI() {
+                updateNavButtons();
+                updateActiveLink();
+                updateBreadcrumbs();
+            }
+
+            function updateNavButtons() {
+                prevBtn.disabled = currentSlide === 0;
+                nextBtn.disabled = currentSlide === slidesData.length - 1;
+            }
+
+            function updateActiveLink() {
+                document.querySelectorAll('.side-nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (parseInt(link.dataset.index) === currentSlide) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            function updateBreadcrumbs() {
+                breadcrumbs.innerHTML = `Home / <span class="text-gray-900">${slidesData[currentSlide].title}</span>`;
+            }
+            
+            function toggleMenu() {
+                sideMenu.classList.toggle('-translate-x-full');
+                menuOverlay.classList.toggle('hidden');
+            }
+
+            function setupEventListeners() {
+                nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+                prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+                
+                mainNav.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (link && link.dataset.index) {
+                        e.preventDefault();
+                        const index = parseInt(link.dataset.index);
+                        showSlide(index);
+                        if (window.innerWidth < 768) {
+                           toggleMenu();
+                        }
+                    }
+                });
+
+                hamburgerBtn.addEventListener('click', toggleMenu);
+                menuOverlay.addEventListener('click', toggleMenu);
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

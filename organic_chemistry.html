@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organic Chemistry II: An Interactive Guide</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathJax Configuration and CDN -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Internal CSS for Layout Control and Styling -->
+    <style>
+        /* Prevents the main browser window from scrolling */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a8a8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Style for the active link in the side navigation */
+        .side-nav-link.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 4px solid #ffffff;
+        }
+
+        /* Custom styles for details/summary to create accordion-like elements */
+        details > summary {
+            list-style: none; /* Remove default marker */
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background-color: #f3f4f6; /* gray-100 */
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: start; /* Align to top to fix layout with LaTeX */
+            transition: background-color 0.2s;
+        }
+
+        details > summary:hover {
+             background-color: #e5e7eb; /* gray-200 */
+        }
+
+        details > summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 300;
+            transition: transform 0.3s ease-in-out;
+            margin-left: 1rem; /* Space between text and icon */
+            flex-shrink: 0;
+        }
+        
+        details[open] > summary::after {
+            transform: rotate(45deg);
+        }
+
+        details .answer-content {
+            padding: 1rem;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            margin-top: -0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen overflow-hidden bg-gray-100">
+        <!-- Side Navigation Menu -->
+        <aside id="side-menu" class="fixed top-0 left-0 z-40 w-64 h-full bg-gray-800 text-white transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0">
+            <div class="p-5 border-b border-gray-700">
+                <h1 class="text-2xl font-bold">Organic Chemistry II</h1>
+                <p class="text-sm text-gray-400">Chemistry Guide</p>
+            </div>
+            <nav id="main-nav" class="p-4 overflow-y-auto h-[calc(100%-80px)]">
+                <ul class="space-y-1">
+                    <!-- Navigation links will be dynamically populated and handled by JS -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Overlay for mobile view when side menu is open -->
+        <div id="menu-overlay" class="fixed inset-0 z-30 hidden bg-black bg-opacity-50 md:hidden"></div>
+
+        <!-- Main Content Area -->
+        <div class="flex flex-col flex-1 w-full h-full overflow-hidden">
+            <!-- Header: Hamburger Menu and Breadcrumbs -->
+            <header class="flex items-center justify-between flex-shrink-0 p-4 bg-white border-b border-gray-200">
+                <button id="hamburger-btn" class="p-2 text-gray-600 rounded-md md:hidden" aria-label="Open Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <nav id="breadcrumbs" class="text-sm text-gray-500 font-medium">
+                    <!-- Breadcrumbs will be dynamically populated by JS -->
+                </nav>
+            </header>
+
+            <!-- Content Slides Wrapper -->
+            <main id="content-wrapper" class="flex-1 p-4 overflow-y-auto md:p-6 lg:p-8">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <!-- Slides will be injected here from the slidesData object -->
+                </div>
+            </main>
+            
+            <!-- Navigation Buttons Footer -->
+            <footer class="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+                <div class="flex justify-between max-w-4xl mx-auto">
+                    <button id="prev-btn" class="px-6 py-2 font-semibold text-white bg-gray-500 rounded-lg shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <button id="next-btn" class="px-6 py-2 font-semibold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const slidesData = [
+                {
+                    title: "Alkanols (Alcohols)",
+                    content: `
+                        <p class="mb-4 text-lg">Alkanols, or alcohols, are organic compounds defined by the presence of one or more <strong>hydroxyl (-OH) functional groups</strong> covalently bonded to a saturated carbon atom. The general formula for simple monohydric alcohols is \\(C_nH_{2n+1}OH\\).</p>
+                        <p class="mb-4">The hydroxyl group is central to alcohol chemistry. Its polar nature allows for <strong>hydrogen bonding</strong>, which results in significantly higher boiling points and water solubility for lower alkanols compared to alkanes of similar size. This functional group is the primary site of chemical reactivity.</p>
+                        
+                        <h4 class="text-md font-bold text-gray-700 mt-6 mb-2">Variation in Physical Properties of Selected Alkanols</h4>
+                        <div class="overflow-x-auto my-4">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr><th class="px-4 py-2">Name</th><th class="px-4 py-2">Formula</th><th class="px-4 py-2">B.P. (°C)</th><th class="px-4 py-2">Solubility (g/100g H₂O)</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Methanol</td><td class="px-4 py-2">\\(CH_4O\\)</td><td class="px-4 py-2">65</td><td class="px-4 py-2">Highly soluble</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Ethanol</td><td class="px-4 py-2">\\(C_2H_6O\\)</td><td class="px-4 py-2">78</td><td class="px-4 py-2">Highly soluble</td></tr>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Propan-1-ol</td><td class="px-4 py-2">\\(C_3H_8O\\)</td><td class="px-4 py-2">97</td><td class="px-4 py-2">Highly soluble</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Butan-1-ol</td><td class="px-4 py-2">\\(C_4H_{10}O\\)</td><td class="px-4 py-2">117</td><td class="px-4 py-2">8</td></tr>
+                                    <tr class="bg-white"><td class="px-4 py-2 font-medium">Hexan-1-ol</td><td class="px-4 py-2">\\(C_6H_{14}O\\)</td><td class="px-4 py-2">157</td><td class="px-4 py-2">0.6</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-2">Comparative Analysis of Ethanol Preparation</h3>
+                        <div class="overflow-x-auto my-4">
+                           <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr><th class="px-4 py-2">Feature</th><th class="px-4 py-2">Fermentation of Sugars</th><th class="px-4 py-2">Hydration of Ethene</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Raw Material</td><td class="px-4 py-2">Sugars (from biomass)</td><td class="px-4 py-2">Ethene (from crude oil)</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Renewability</td><td class="px-4 py-2">Renewable</td><td class="px-4 py-2">Non-renewable</td></tr>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Conditions</td><td class="px-4 py-2">Mild (~30°C, 1 atm)</td><td class="px-4 py-2">Harsh (~300°C, 60-70 atm)</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Rate</td><td class="px-4 py-2">Slow</td><td class="px-4 py-2">Fast</td></tr>
+                                     <tr class="bg-white"><td class="px-4 py-2 font-medium">Atom Economy</td><td class="px-4 py-2">Lower (~51%)</td><td class="px-4 py-2">100%</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `
+                },
+                {
+                    title: "Alkanoic Acids",
+                    content: `
+                        <p class="text-lg mb-4">Alkanoic acids (carboxylic acids) are characterized by the <strong>carboxyl functional group (-COOH)</strong>, which consists of a carbonyl (C=O) and a hydroxyl (-OH) group on the same carbon. Their general formula is \\(R-COOH\\).</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Acidity and Physical Properties</h3>
+                        <p class="mb-4">Alkanoic acids are weak acids, but are significantly more acidic than alcohols. This enhanced acidity is due to the <strong>resonance stabilization of the carboxylate anion (\\(RCOO^-\\))</strong> formed upon deprotonation, where the negative charge is delocalized over both oxygen atoms. This stability makes the conjugate base weaker and the parent acid stronger.</p>
+                        <p>Physically, they have very high boiling points because they can form stable <strong>hydrogen-bonded dimers</strong>, which effectively doubles their molecular size and strengthens intermolecular forces.</p>
+                        
+                        <h4 class="text-md font-bold text-gray-700 mt-6 mb-2">Physical Properties of Selected Alkanoic Acids</h4>
+                        <div class="overflow-x-auto my-4">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr><th class="px-4 py-2">Name</th><th class="px-4 py-2">B.P. (°C)</th><th class="px-4 py-2">M.P. (°C)</th><th class="px-4 py-2">Solubility in Water</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Methanoic Acid</td><td class="px-4 py-2">101</td><td class="px-4 py-2">8.4</td><td class="px-4 py-2">Very high</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Ethanoic Acid</td><td class="px-4 py-2">118</td><td class="px-4 py-2">16.6</td><td class="px-4 py-2">Very high</td></tr>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Propanoic Acid</td><td class="px-4 py-2">141</td><td class="px-4 py-2">-20.8</td><td class="px-4 py-2">Highly soluble</td></tr>
+                                    <tr class="bg-gray-50"><td class="px-4 py-2 font-medium">Hexanoic Acid</td><td class="px-4 py-2">205</td><td class="px-4 py-2">-1.5</td><td class="px-4 py-2">Low</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-2">Reactions and Uses</h3>
+                        <p>Their chemistry is dominated by the acidity of the carboxyl group. They react with bases in neutralization reactions and, characteristically, with carbonates and bicarbonates to produce carbon dioxide gas (a key qualitative test). They also undergo esterification with alcohols. Ethanoic acid (in vinegar) is a common preservative, while others are used to make soaps and polymers.</p>
+                    `
+                },
+                {
+                    title: "Esters",
+                    content: `
+                        <p class="text-lg mb-4">Esters are organic compounds containing the <strong>ester functional group (-COO-)</strong>. They are derived from the reaction of a carboxylic acid and an alcohol. Their general structure is \\(R-CO-OR'\\).</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Properties and Formation</h3>
+                        <p class="mb-4">Many lower molecular weight esters are volatile liquids with characteristic, often pleasant, fruity, or floral smells, making them valuable in perfumes and artificial flavorings. They have lower boiling points than comparable acids and alcohols because they cannot act as hydrogen bond donors.</p>
+                        <p>The most common method of formation is <strong>Fischer esterification</strong>, a reversible acid-catalyzed reaction between a carboxylic acid and an alcohol. The yield can be maximized by using an excess of one reactant or by removing water as it forms.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Hydrolysis</h3>
+                        <p>Hydrolysis is the reverse of esterification. <strong>Acid hydrolysis</strong> is an equilibrium process. <strong>Alkaline hydrolysis (saponification)</strong> is irreversible because the carboxylic acid formed is immediately deprotonated by the base to form a stable carboxylate salt, driving the reaction to completion. This process is used to make soap from natural fats and oils, which are triesters of glycerol.</p>
+                    `
+                },
+                {
+                    title: "Detergents",
+                    content: `
+                        <p class="text-lg mb-4">Detergents are cleaning agents with an <strong>amphiphilic</strong> (or amphipathic) molecular structure. This means they possess two distinct parts: a long, non-polar <strong>hydrophobic tail</strong> that dissolves in oils and grease, and a polar or ionic <strong>hydrophilic head</strong> that is attracted to water.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Soapy vs. Soapless Detergents</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold">Soapy Detergents (Soaps)</h4>
+                                <p>Salts of long-chain fatty acids (e.g., \\(RCOO^-Na^+\\)), produced by the saponification of fats or oils. Their primary disadvantage is their reaction with \\(Ca^{2+}\\) and \\(Mg^{2+}\\) ions in hard water to form an insoluble precipitate called <strong>scum</strong>, which reduces their cleaning effectiveness.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Soapless Detergents (Synthetic)</h4>
+                                <p>These were developed to overcome the limitations of soap. Their hydrophilic heads are typically sulphonate (\\(R-SO_3^-\\)) or sulphate (\\(R-OSO_3^-\\)) groups. The calcium and magnesium salts of these detergents are soluble, allowing them to function effectively in hard water without forming scum.</p>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Environmental Impact</h3>
+                        <p>Environmental concerns associated with detergents include the poor biodegradability of early branched-chain synthetic detergents (now replaced by linear-chain versions) and the use of phosphates as builders, which can lead to eutrophication of waterways.</p>
+                    `
+                },
+                {
+                    title: "Polymers",
+                    content: `
+                        <p class="text-lg mb-4">Polymers are large macromolecules composed of many repeating structural units derived from smaller molecules called <strong>monomers</strong>. The process of linking monomers is <strong>polymerization</strong>. This transformation results in materials with vastly different properties, such as strength and flexibility, due to high molecular weight and intermolecular forces.</p>
+                        
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Addition Polymerization</h3>
+                        <p class="mb-4">This process involves unsaturated monomers (with C=C bonds) adding sequentially to form a long polymer chain. No small molecules are eliminated. The empirical formula of the repeating unit is identical to that of the monomer. Examples include:</p>
+                        
+                        <div class="overflow-x-auto my-4">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr><th class="px-4 py-2">Polymer</th><th class="px-4 py-2">Monomer</th><th class="px-4 py-2">Key Uses</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Polyethene (PE)</td><td class="px-4 py-2">Ethene</td><td class="px-4 py-2">Packaging, bags, bottles</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Polypropene (PP)</td><td class="px-4 py-2">Propene</td><td class="px-4 py-2">Containers, fibers, ropes</td></tr>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Polychloroethene (PVC)</td><td class="px-4 py-2">Chloroethene</td><td class="px-4 py-2">Pipes, window frames</td></tr>
+                                    <tr class="bg-gray-50"><td class="px-4 py-2 font-medium">Polytetrafluoroethene (PTFE)</td><td class="px-4 py-2">Tetrafluoroethene</td><td class="px-4 py-2">Non-stick coatings (Teflon)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-2">Condensation Polymerization</h3>
+                        <p class="mb-4">This process involves monomers with at least two reactive functional groups reacting to form a polymer with the simultaneous elimination of a small molecule, such as water. Examples include:</p>
+                        
+                         <div class="overflow-x-auto my-4">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr><th class="px-4 py-2">Polymer</th><th class="px-4 py-2">Linkage</th><th class="px-4 py-2">Monomers</th><th class="px-4 py-2">Key Uses</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Nylon 6,6</td><td class="px-4 py-2">Amide</td><td class="px-4 py-2">Diamine & Diacid</td><td class="px-4 py-2">Fibers, plastics</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Terylene (PET)</td><td class="px-4 py-2">Ester</td><td class="px-4 py-2">Diol & Diacid</td><td class="px-4 py-2">Fibers, bottles</td></tr>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Protein</td><td class="px-4 py-2">Peptide (Amide)</td><td class="px-4 py-2">Amino acids</td><td class="px-4 py-2">Biological structures</td></tr>
+                                    <tr class="bg-gray-50"><td class="px-4 py-2 font-medium">Starch</td><td class="px-4 py-2">Glycosidic</td><td class="px-4 py-2">Glucose</td><td class="px-4 py-2">Energy storage</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3 class="text-xl font-bold text-gray-800 mt-8 mb-2">Natural Rubber and Vulcanization</h3>
+                        <p class="mb-4">Natural rubber is a polymer of the monomer isoprene. Raw rubber is soft and sticky. <strong>Vulcanization</strong> is a crucial process where raw rubber is heated with sulphur. The sulphur forms cross-links between the polymer chains, creating a 3D network. This process dramatically improves the rubber's strength, elasticity, and temperature stability.</p>
+                    `
+                },
+                {
+                    title: "Key Experiments",
+                    content: `
+                        <p class="mb-6">This section summarizes key laboratory experiments that demonstrate the characteristic reactions of the organic families studied.</p>
+                        <div class="space-y-6">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">1. Esterification</h4>
+                                <p><strong>Objective:</strong> To prepare an ester and observe its characteristic properties.</p>
+                                <p><strong>Procedure:</strong> Gently heat a mixture of an alkanol (e.g., ethanol) and an alkanoic acid (e.g., ethanoic acid) with a few drops of concentrated sulphuric acid. Afterwards, pour the mixture into a beaker of cold sodium carbonate solution.</p>
+                                <p><strong>Observations:</strong> A sweet, fruity smell is produced. An oily layer of the ester, which is less dense than water, floats on the surface. The sodium carbonate neutralizes the excess acid catalyst.</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">2. Saponification (Soap Making)</h4>
+                                <p><strong>Objective:</strong> To demonstrate the alkaline hydrolysis of a fat or oil to produce soap.</p>
+                                <p><strong>Procedure:</strong> Heat a sample of fat or oil (e.g., olive oil) with a concentrated solution of sodium hydroxide. Stir continuously. To separate the soap, add concentrated sodium chloride solution ("salting out").</p>
+                                <p><strong>Conclusion:</strong> A solid curd of soap precipitates from the solution. The process breaks down the ester linkages in the fat/oil, yielding soap (sodium salts of fatty acids) and glycerol.</p>
+                            </div>
+                             <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">3. Oxidation of Alkanols</h4>
+                                <p><strong>Objective:</strong> To distinguish between primary, secondary, and tertiary alcohols.</p>
+                                <p><strong>Procedure:</strong> Add a few drops of acidified potassium manganate(VII) solution to separate test tubes containing a primary alcohol (e.g., ethanol), a secondary alcohol (e.g., propan-2-ol), and a tertiary alcohol (e.g., 2-methylpropan-2-ol), and warm gently.</p>
+                                <p><strong>Conclusion:</strong> The purple color of the manganate(VII) will disappear with the primary and secondary alcohols (as they are oxidized), but will persist with the tertiary alcohol, which is resistant to oxidation.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Worked Examples",
+                    content: `
+                        <p class="mb-6">Apply your knowledge by working through these calculation-based examples.</p>
+                        <div class="space-y-4">
+                             <details>
+                                <summary>Example 1: Nomenclature of a Complex Alkanol</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">Give the systematic IUPAC name for the following compound: \\(CH_3CH(OH)CH(CH_3)CH_2CH_3\\).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Identify the longest carbon chain containing the -OH group:</strong> The longest chain has 5 carbons (pentane).</li>
+                                        <li><strong>Identify the principal functional group:</strong> The hydroxyl (-OH) group, so the suffix is '-ol'.</li>
+                                        <li><strong>Number the chain:</strong> Number from the left to give the -OH group the lowest possible number (position 2). If numbered from the right, it would be position 4. So, we number from the left.</li>
+                                        <li><strong>Identify and locate substituents:</strong> There is a methyl group (\\(-CH_3\\)) on carbon 3.</li>
+                                        <li><strong>Assemble the name:</strong> Combine the parts: substituent name, parent chain name, and suffix. The name is <strong>3-methylpentan-2-ol</strong>.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                            <details>
+                                <summary>Example 2: Stoichiometry of Esterification</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">If 12.0 g of ethanoic acid (\\(CH_3COOH\\)) reacts with excess ethanol, what is the theoretical yield (mass) of ethyl ethanoate (\\(CH_3COOCH_2CH_3\\))? (C=12, H=1, O=16).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Write the balanced equation:</strong><br>\\(CH_3COOH + CH_3CH_2OH \\rightleftharpoons CH_3COOCH_2CH_3 + H_2O\\). The mole ratio is 1:1.</li>
+                                        <li><strong>Calculate molar masses:</strong><br>Molar Mass of Ethanoic Acid = (2×12) + (4×1) + (2×16) = 60 g/mol.<br>Molar Mass of Ethyl Ethanoate = (4×12) + (8×1) + (2×16) = 88 g/mol.</li>
+                                        <li><strong>Calculate moles of ethanoic acid (the limiting reactant):</strong><br>Moles = Mass / Molar mass = 12.0 g / 60 g/mol = 0.2 mol.</li>
+                                        <li><strong>Use stoichiometry to find moles of ester produced:</strong><br>Since the ratio is 1:1, 0.2 mol of acid will produce 0.2 mol of ester.</li>
+                                        <li><strong>Calculate the theoretical mass of the ester:</strong><br>Mass = Moles × Molar mass = 0.2 mol × 88 g/mol = 17.6 g.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                             <details>
+                                <summary>Example 3: Saponification Calculation</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">Calculate the mass of sodium hydroxide required to completely saponify 10.0 g of glyceryl tristearate (\\(C_{57}H_{110}O_6\\)), a type of fat. (C=12, H=1, O=16, Na=23).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Write the balanced equation:</strong><br>\\(C_{57}H_{110}O_6 + 3NaOH \\rightarrow 3C_{17}H_{35}COONa + C_3H_5(OH)_3\\)</li>
+                                        <li><strong>Calculate molar masses:</strong><br>Molar Mass of Fat (\\(C_{57}H_{110}O_6\\)) = (57×12) + (110×1) + (6×16) = 890 g/mol.<br>Molar Mass of NaOH = 23 + 16 + 1 = 40 g/mol.</li>
+                                        <li><strong>Calculate moles of fat:</strong><br>Moles = 10.0 g / 890 g/mol = 0.0112 mol.</li>
+                                        <li><strong>Find moles of NaOH required:</strong><br>The mole ratio of Fat to NaOH is 1:3.<br>Moles of NaOH = 3 × 0.0112 mol = 0.0337 mol.</li>
+                                        <li><strong>Calculate the mass of NaOH:</strong><br>Mass = Moles × Molar mass = 0.0337 mol × 40 g/mol = 1.35 g.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                            <details>
+                                <summary>Example 4: Identifying an Alkanoic Acid</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">A 0.74 g sample of a monocarboxylic acid was completely neutralized by 100 cm³ of 0.1 M sodium hydroxide solution. Determine the molecular formula of the acid.</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Write the general neutralization equation:</strong><br>\\(RCOOH + NaOH \\rightarrow RCOONa + H_2O\\). The mole ratio is 1:1.</li>
+                                        <li><strong>Calculate moles of NaOH used:</strong><br>Moles = Concentration × Volume (in L) = 0.1 mol/L × (100 / 1000) L = 0.01 mol.</li>
+                                        <li><strong>Determine moles of the alkanoic acid:</strong><br>From the 1:1 ratio, moles of RCOOH = 0.01 mol.</li>
+                                        <li><strong>Calculate the molar mass of the acid:</strong><br>Molar Mass = Mass / Moles = 0.74 g / 0.01 mol = 74 g/mol.</li>
+                                        <li><strong>Determine the formula:</strong><br>The general formula is \\(C_nH_{2n+1}COOH\\).<br>Molar mass = 12n + (2n+1) + 12 + 16 + 16 + 1 = 14n + 46.<br>Set this equal to the calculated molar mass: 14n + 46 = 74.<br>14n = 28, so n = 2.<br>The alkyl group is \\(C_2H_5\\). The acid is \\(C_2H_5COOH\\), which is propanoic acid.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                            <details>
+                                <summary>Example 5: Degree of Polymerization</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">A sample of polyethene is found to have a relative molecular mass (RMM) of 28,000. Calculate the degree of polymerization (n). (C=12, H=1).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Identify the monomer and its RMM:</strong><br>The monomer for polyethene is ethene (\\(C_2H_4\\)).<br>RMM of ethene = (2 × 12) + (4 × 1) = 28.</li>
+                                        <li><strong>Identify the repeating unit:</strong><br>The repeating unit is \\(-[CH_2-CH_2]-\\), which has the same mass as the monomer. RMM of repeating unit = 28.</li>
+                                        <li><strong>Calculate the degree of polymerization (n):</strong><br>n = (RMM of polymer) / (RMM of repeating unit)<br>n = 28,000 / 28 = 1,000.<br>The polymer chain contains approximately 1,000 monomer units.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                        </div>
+                    `
+                },
+                {
+                    title: "Revision Questions",
+                    content: `
+                        <p class="mb-6">Test your understanding of the chapter with these 135 revision questions. Click on a question to reveal the answer.</p>
+                        <div class="space-y-4">
+                            <!-- Questions will be generated here by JS -->
+                        </div>
+                    `
+                }
+            ];
+
+            const revisionQuestions = [
+                // Alkanols
+                { q: "What is organic chemistry the study of, and what functional groups does Organic Chemistry II focus on?", a: "Organic chemistry is the study of carbon-containing compounds. This guide focuses on compounds with hydroxyl (-OH), carboxyl (-COOH), ester (-COO-), amide (-CONH-), and other groups that form detergents and polymers." },
+                { q: "List key aspects covered for each organic family.", a: "The guide covers Structure and Nomenclature, Isomerism, Preparation, Physical Properties, Chemical Reactions, and Applications for each family of compounds." },
+                { q: "What is the general formula for simple, acyclic monohydric alkanols, and what functional group defines them?", a: "The general formula is \\(C_nH_{2n+1}OH\\). They are defined by the hydroxyl (-OH) functional group." },
+                { q: "Explain how the hydroxyl group influences the physical properties of alkanols.", a: "The polar -OH group allows alkanols to form strong intermolecular hydrogen bonds, giving them significantly higher boiling points and greater water solubility than alkanes of similar size." },
+                { q: "Why do lower alkanols have high boiling points and water solubility?", a: "This is due to the strong intermolecular hydrogen bonds they can form with each other (raising boiling points) and with water molecules (increasing solubility)." },
+                { q: "Explain the analogy between alkanols and water molecules.", a: "Alkanols (R-O-H) can be seen as derivatives of water (H-O-H) where one hydrogen is replaced by an alkyl group (R). This analogy helps explain the polar nature of the O-H bond." },
+                { q: "How are alkanols classified, and why is this important?", a: "They are classified as primary (1°), secondary (2°), or tertiary (3°) based on the number of carbon atoms attached to the carbinol carbon. This is crucial as it determines their chemical reactivity, particularly in oxidation reactions." },
+                { q: "Define a primary alcohol and give two examples.", a: "A primary (1°) alcohol has the -OH group attached to a carbon that is bonded to at most one other carbon. Examples: Ethanol (\\(CH_3CH_2OH\\)) and Propan-1-ol." },
+                { q: "Define a secondary alcohol and give an example.", a: "A secondary (2°) alcohol has the -OH group attached to a carbon that is bonded to two other carbons. Example: Propan-2-ol (\\(CH_3CH(OH)CH_3\\))." },
+                { q: "Define a tertiary alcohol and give an example.", a: "A tertiary (3°) alcohol has the -OH group attached to a carbon that is bonded to three other carbons. Example: 2-methylpropan-2-ol (\\((CH_3)_3COH\\))." },
+                { q: "What is the systematic method for naming alkanols called?", a: "It is the IUPAC (International Union of Pure and Applied Chemistry) system of nomenclature." },
+                { q: "Outline the key IUPAC rules for naming alkanols.", a: "1. Find the longest carbon chain containing the -OH group. 2. Change the '-e' of the parent alkane to '-ol'. 3. Number the chain to give the -OH carbon the lowest possible number. 4. Name and number any substituents." },
+                { q: "How is the position of the hydroxyl group indicated in an alkanol's name?", a: "By a number (locant) placed before the '-ol' suffix (e.g., propan-1-ol) or before the parent name (1-propanol)." },
+                { q: "How are alkanols with multiple hydroxyl groups named?", a: "Prefixes like 'di-' or 'tri-' are used before '-ol', and the '-e' from the alkane name is retained (e.g., ethane-1,2-diol)." },
+                { q: "Draw the structural formula for Ethanol and state its IUPAC name.", a: "IUPAC name: Ethanol. Formula: \\(CH_3CH_2OH\\)." },
+                { q: "Draw the structural formula for Propan-1-ol and state its IUPAC name.", a: "IUPAC name: Propan-1-ol. Formula: \\(CH_3CH_2CH_2OH\\)." },
+                { q: "Draw the structural formula for 2-Methylbutan-1-ol and state its IUPAC name.", a: "IUPAC name: 2-Methylbutan-1-ol. Formula: \\(CH_3CH_2CH(CH_3)CH_2OH\\)." },
+                { q: "Explain isomerism in alkanols.", a: "Isomerism is when compounds have the same molecular formula but different structural arrangements. In alkanols, this arises from different carbon chain structures (chain isomerism) or different positions of the -OH group (positional isomerism)." },
+                { q: "Define chain isomerism and give an example.", a: "Chain isomers have the same functional group but different arrangements of the carbon skeleton. Example: Butan-1-ol and 2-methylpropan-1-ol (both \\(C_4H_{10}O\\))." },
+                { q: "Define positional isomerism and give an example.", a: "Positional isomers have the same carbon skeleton but the functional group is at a different position. Example: Propan-1-ol and propan-2-ol." },
+                { q: "For \\(C_4H_{10}O\\), list the four alcohol isomers and their classifications.", a: "1. Butan-1-ol (primary). 2. Butan-2-ol (secondary). 3. 2-Methylpropan-1-ol (primary). 4. 2-Methylpropan-2-ol (tertiary)." },
+                { q: "How do structural differences among isomers affect their properties?", a: "Isomers have different physical properties (like boiling points) and can have different chemical reactivity due to molecular shape and steric hindrance." },
+                { q: "What factors influence the choice of preparation method for an alcohol?", a: "Factors include the specific alcohol needed, cost and availability of starting materials, desired scale of production, and environmental considerations." },
+                { q: "Describe the fermentation of sugars to produce ethanol.", a: "This biochemical process uses yeast enzymes to convert simple sugars like glucose into ethanol and carbon dioxide, typically in warm water (~30°C). The reaction is \\(C_6H_{12}O_6 \\rightarrow 2C_2H_5OH + 2CO_2\\)." },
+                { q: "How can the \\(CO_2\\) from fermentation be confirmed?", a: "By bubbling the evolved gas through limewater (calcium hydroxide solution), which turns milky due to the formation of a calcium carbonate precipitate." },
+                { q: "What is the typical yield of ethanol from fermentation, and how is it concentrated?", a: "The yield is typically a 10-15% aqueous solution. It is concentrated by fractional distillation." },
+                { q: "Describe the hydrolysis of alkenes via alkyl hydrogen sulphates.", a: "This is a two-step process. First, an alkene reacts with cold, concentrated sulfuric acid to form an alkyl hydrogen sulphate. Second, this intermediate is warmed with water to hydrolyze it, yielding the alcohol and regenerating the sulfuric acid." },
+                { q: "What is Markovnikov's rule in this context?", a: "When adding sulfuric acid to an unsymmetrical alkene, the hydrogen adds to the carbon of the double bond that already has more hydrogen atoms." },
+                { q: "Describe the industrial catalytic hydration of ethene.", a: "Ethene gas reacts with steam at high temperature (~300°C) and high pressure (60-70 atm) using phosphoric(V) acid as a catalyst to produce ethanol. The reaction is reversible: \\(C_2H_4 + H_2O \\rightleftharpoons C_2H_5OH\\)." },
+                { q: "How is methanol industrially synthesized?", a: "Methanol is made from synthesis gas (a mixture of CO and \\(H_2\\)) using a catalyst (e.g., Cu/ZnO/Al₂O₃) at high pressure and temperature." },
+                { q: "Compare fermentation and hydration of ethene based on raw material and renewability.", a: "Fermentation uses renewable biomass (sugars). Hydration uses non-renewable ethene from crude oil." },
+                { q: "Compare fermentation and hydration of ethene based on reaction conditions and rate.", a: "Fermentation uses mild conditions (~30°C, 1 atm) and is slow. Hydration uses harsh conditions (~300°C, 60-70 atm) and is fast." },
+                { q: "Compare fermentation and hydration of ethene based on yield and purity.", a: "Fermentation gives a low initial yield (~10-15% aqueous solution) that needs purification. Hydration has a high overall yield (~95%) due to recycling and produces a relatively pure product." },
+                { q: "Define atom economy and compare it for the two ethanol production methods.", a: "Atom economy measures how many reactant atoms are incorporated into the desired product. Hydration of ethene has 100% atom economy. Fermentation of glucose has a lower atom economy (51.1%) because \\(CO_2\\) is produced as a byproduct." },
+                { q: "Discuss the green chemistry trade-offs between fermentation and catalytic hydration.", a: "Fermentation is green because it uses renewable resources. Hydration is more efficient and continuous but relies on fossil fuels. The choice involves balancing sustainability with economic viability." },
+                { q: "Describe the physical state and odor of lower alkanols.", a: "They are colorless, volatile liquids with characteristic, often 'alcoholic', smells." },
+                { q: "Why are alkanol boiling points much higher than those of similar alkanes?", a: "This is due to strong intermolecular hydrogen bonding between the -OH groups, which requires more energy to overcome than the weak Van der Waals forces in alkanes." },
+                { q: "What is the trend for boiling points within the alkanol homologous series?", a: "Boiling points increase with increasing carbon chain length and molecular mass, due to increasing strength of Van der Waals forces." },
+                { q: "Explain the high water solubility of lower alkanes.", a: "Their polar -OH groups can form hydrogen bonds with water molecules, making them miscible." },
+                { q: "Why does the water solubility of alkanols decrease with increasing chain length?", a: "As the non-polar alkyl chain (the hydrophobic part) gets larger, it dominates the molecule's character, disrupting water's hydrogen bonding network and making it less soluble." },
+                { q: "What is the general trend for the density of alkanols?", a: "Most are less dense than water. Density tends to increase slightly with molecular weight." },
+                { q: "Describe the combustion of alkanols.", a: "They are flammable and burn in excess oxygen to produce carbon dioxide, water, and heat. The reaction is exothermic." },
+                { q: "How do alkanols react with active metals like sodium?", a: "They react to liberate hydrogen gas and form a metal alkoxide. Example: \\(2CH_3CH_2OH + 2Na \\rightarrow 2CH_3CH_2ONa + H_2\\)." },
+                { q: "How does the reactivity of alcohols with sodium vary?", a: "The rate of reaction generally decreases in the order: primary > secondary > tertiary, due to increasing steric hindrance." },
+                { q: "Define esterification.", a: "Esterification is the reaction between an alkanol and a carboxylic acid to form an ester and water, typically catalyzed by a strong acid." },
+                { q: "Write the general equation for esterification.", a: "\\(RCOOH + R'OH \\rightleftharpoons RCOOR' + H_2O\\)." },
+                { q: "What are the two roles of concentrated \\(H_2SO_4\\) in esterification?", a: "It acts as both a catalyst and a dehydrating agent (to shift the equilibrium to the right)." },
+                { q: "Outline the five key steps of the Fischer esterification mechanism.", a: "1. Protonation of the acid's carbonyl oxygen. 2. Nucleophilic attack by the alcohol. 3. Proton transfer to create a good leaving group (water). 4. Elimination of water. 5. Deprotonation to form the final ester." },
+                { q: "What products are formed from alcohol oxidation?", a: "The product depends on the alcohol type: primary alcohols oxidize to aldehydes then carboxylic acids; secondary alcohols oxidize to ketones; tertiary alcohols are resistant to mild oxidation." },
+                { q: "What oxidizing agents are commonly used, and what are their color changes?", a: "Acidified \\(KMnO_4\\) (purple to colorless) and acidified \\(K_2Cr_2O_7\\) (orange to green)." },
+                { q: "Describe the oxidation of primary alcohols.", a: "They are oxidized first to aldehydes and then to carboxylic acids. To isolate the aldehyde, milder conditions or immediate distillation of the aldehyde are required." },
+                { q: "Write the oxidation reaction for ethanol to ethanoic acid.", a: "\\(CH_3CH_2OH + 2[O] \\rightarrow CH_3COOH + H_2O\\) (using a strong oxidizing agent)." },
+                { q: "Describe the oxidation of secondary alcohols.", a: "They are oxidized to ketones, which are resistant to further oxidation." },
+                { q: "Why are tertiary alcohols resistant to oxidation?", a: "Because the carbinol carbon does not have a hydrogen atom attached to it, which is necessary for the oxidation reaction to proceed under mild conditions." },
+                { q: "What is the chemical basis for the breathalyzer test?", a: "The oxidation of ethanol by orange potassium dichromate(VI). The extent of the color change to green is proportional to the amount of ethanol in the breath." },
+                { q: "What products can be formed from the dehydration of alcohols?", a: "Either alkenes (intramolecular dehydration) or ethers (intermolecular dehydration), depending on the conditions." },
+                { q: "Describe the conditions for intramolecular dehydration of ethanol.", a: "Heating ethanol with excess concentrated sulfuric acid at about 170-180°C produces ethene gas." },
+                { q: "Outline the E1 mechanism for alcohol dehydration.", a: "1. Protonation of the -OH group. 2. Loss of water to form a carbocation intermediate. 3. Deprotonation of an adjacent carbon to form the alkene." },
+                { q: "Describe the conditions for intermolecular dehydration of ethanol.", a: "Heating ethanol with concentrated sulfuric acid at a lower temperature, around 140°C, favors the formation of diethyl ether." },
+                { q: "How is the product of dehydration controlled?", a: "By temperature and reactant ratios. Higher temperatures and excess acid favor alkene formation, while lower temperatures and excess alcohol favor ether formation." },
+                { q: "List five uses of alkanols.", a: "1. Solvents (in perfumes, cosmetics). 2. Fuels (gasohol). 3. Antiseptics (ethanol). 4. Beverages (ethanol). 5. Chemical feedstock (for making other organic compounds)." },
+                { q: "What are the acute health effects of ethanol?", a: "Intoxication, impaired coordination, nausea. High doses can lead to alcohol poisoning and death." },
+                { q: "Explain the toxicity of methanol.", a: "Methanol is metabolized to formaldehyde and formic acid. Formic acid is highly toxic, causing metabolic acidosis and specifically damaging the optic nerve, which can lead to permanent blindness." },
+                { q: "What is denatured alcohol (methylated spirit) and why is it made?", a: "It is ethanol that has been made unfit for drinking by adding poisonous substances like methanol and a dye. This is done to avoid the high taxes placed on beverage alcohol." },
+                { q: "State the functional group and two types of isomerism for alkanols.", a: "Functional group: Hydroxyl (-OH). Isomerism types: Chain isomerism and Positional isomerism." },
+                { q: "List and explain two key physical properties of alkanols.", a: "1. High boiling points due to intermolecular hydrogen bonding. 2. Water solubility of lower members, also due to hydrogen bonding with water molecules." },
+                // Alkanoic Acids
+                { q: "What is the defining functional group and general formula of alkanoic acids?", a: "They are defined by the carboxyl functional group (-COOH). The general formula is R-COOH." },
+                { q: "Outline the IUPAC rules for naming alkanoic acids.", a: "The '-e' of the parent alkane is replaced with '-oic acid'. The carboxyl carbon is always C1." },
+                { q: "Give the IUPAC and common name for HCOOH.", a: "IUPAC: Methanoic acid. Common: Formic acid." },
+                { q: "Give the IUPAC and common name for the acid in vinegar.", a: "IUPAC: Ethanoic acid. Common: Acetic acid." },
+                { q: "Where are methanoic and ethanoic acid found naturally?", a: "Methanoic acid is in ant stings and nettles. Ethanoic acid is in vinegar." },
+                { q: "What are fatty acids?", a: "They are long-chain alkanoic acids that are fundamental components of fats, oils, and cell membranes." },
+                { q: "Why is the carboxyl group important in biochemistry?", a: "It is a key functional group in essential biomolecules like amino acids (building blocks of proteins) and fatty acids." },
+                { q: "Describe the laboratory preparation of alkanoic acids.", a: "They are commonly prepared by the oxidation of primary alcohols or aldehydes using strong oxidizing agents like acidified \\(KMnO_4\\) or \\(K_2Cr_2O_7\\) with heating." },
+                { q: "How can ethanoic acid be prepared from ethanol?", a: "By oxidizing ethanol with a strong oxidizing agent like acidified potassium dichromate(VI) under reflux (heating)." },
+                { q: "What color changes are observed during the oxidation of ethanol to ethanoic acid?", a: "If using acidified \\(KMnO_4\\), the solution turns from purple to colorless. If using acidified \\(K_2Cr_2O_7\\), it turns from orange to green." },
+                { q: "How are aldehydes oxidized to carboxylic acids?", a: "Aldehydes are easily oxidized to carboxylic acids by both strong (e.g., \\(KMnO_4\\)) and mild (e.g., Tollens' reagent) oxidizing agents." },
+                { q: "Describe the physical properties (state, odor, solubility) of lower alkanoic acids.", a: "They are colorless liquids with sharp, pungent odors (like vinegar). They are miscible with water due to hydrogen bonding." },
+                { q: "Explain the trend in water solubility of alkanoic acids.", a: "Solubility decreases as the carbon chain length increases because the non-polar hydrocarbon tail becomes larger and more dominant." },
+                { q: "Explain the trend in boiling points of alkanoic acids.", a: "Boiling points increase with molecular mass. They are significantly higher than corresponding alcohols." },
+                { q: "Why are the boiling points of alkanoic acids higher than alcohols of similar mass?", a: "Because alkanoic acid molecules form stable dimers held together by two hydrogen bonds, which requires much more energy to break than the single hydrogen bonds between alcohol molecules." },
+                { q: "Are alkanoic acids strong or weak acids? Explain.", a: "They are weak acids because they only partially dissociate in water. This is because the carboxylate anion formed is stabilized by resonance, making the proton donation more favorable than in alcohols but less than in strong mineral acids." },
+                { q: "Write the dissociation equilibrium for ethanoic acid.", a: "\\(CH_3COOH(aq) + H_2O(l) \\rightleftharpoons CH_3COO^-(aq) + H_3O^+(aq)\\)." },
+                { q: "How do alkanoic acids react with reactive metals?", a: "They react with metals above hydrogen in the reactivity series to produce hydrogen gas and a metal alkanoate salt." },
+                { q: "How do alkanoic acids react with bases?", a: "They undergo neutralization reactions with bases (alkalis) to form a salt and water." },
+                { q: "What is a characteristic test for the carboxyl group?", a: "Reaction with carbonates or hydrogencarbonates, which produces effervescence (bubbles of \\(CO_2\\) gas)." },
+                { q: "Write the reaction between ethanoic acid and sodium carbonate.", a: "\\(2CH_3COOH(aq) + Na_2CO_3(aq) \\rightarrow 2CH_3COONa(aq) + CO_2(g) + H_2O(l)\\)." },
+                { q: "List three important uses of alkanoic acids.", a: "1. Food preservation (vinegar). 2. Synthesis of esters for flavors and fragrances. 3. Manufacture of polymers and pharmaceuticals (like aspirin)." },
+                // Esters
+                { q: "What are esters and what is their general structure?", a: "Esters are compounds derived from carboxylic acids and alcohols. Their general structure is R-CO-OR', containing the ester functional group." },
+                { q: "How are esters systematically named?", a: "The alkyl group (R') from the alcohol is named first, followed by the name of the parent acid with the '-ic acid' ending changed to '-oate'." },
+                { q: "Give the IUPAC name for the ester formed from methanoic acid and propan-1-ol.", a: "Propyl methanoate." },
+                { q: "Are esters acidic?", a: "No, they are generally neutral as they lack an acidic hydrogen on an oxygen atom." },
+                { q: "What is the most common method for synthesizing esters?", a: "Fischer esterification, the reaction of a carboxylic acid with an alcohol in the presence of a strong acid catalyst and heat." },
+                { q: "How can the yield of an ester be maximized in Fischer esterification?", a: "By using an excess of one of the reactants or by removing the water as it is formed, which shifts the equilibrium to the right." },
+                { q: "Describe two alternative, irreversible methods for ester synthesis.", a: "1. Reacting an alcohol with a more reactive acid chloride (RCOCl). 2. Reacting an alcohol with an acid anhydride (\\((RCO)_2O\\))." },
+                { q: "Describe the characteristic odor of lower esters and give an example.", a: "They often have pleasant, fruity or floral smells. Example: pentyl ethanoate smells like bananas." },
+                { q: "Why do esters have lower boiling points than comparable acids and alcohols?", a: "Because ester molecules cannot form hydrogen bonds with each other, resulting in weaker intermolecular forces." },
+                { q: "Discuss the solubility of esters in water.", a: "Lower esters are somewhat soluble because they can accept hydrogen bonds from water. Solubility decreases rapidly as the size of the hydrocarbon parts increases." },
+                { q: "What is ester hydrolysis?", a: "It is the chemical breakdown of an ester into its parent carboxylic acid and alcohol by reaction with water." },
+                { q: "Describe acid hydrolysis of esters.", a: "It is the reverse of Fischer esterification, an equilibrium process catalyzed by dilute acid, requiring excess water to drive it to completion." },
+                { q: "Describe alkaline hydrolysis of esters (saponification).", a: "It is the irreversible hydrolysis of an ester using a hot aqueous alkali (like NaOH). It produces a carboxylate salt and an alcohol." },
+                { q: "Outline the mechanism of saponification.", a: "1. Nucleophilic attack by OH⁻ on the carbonyl carbon. 2. Formation of a tetrahedral intermediate. 3. Expulsion of the alkoxide leaving group. 4. Rapid, irreversible deprotonation of the newly formed carboxylic acid by the strong alkoxide base." },
+                { q: "Why is alkaline hydrolysis preferred for complete ester cleavage?", a: "Because it is an irreversible reaction, it goes to completion and thus gives a higher yield of the products (carboxylate salt and alcohol)." },
+                { q: "What are fats and oils chemically?", a: "They are triglycerides, which are triesters formed from one molecule of glycerol and three molecules of long-chain fatty acids." },
+                { q: "Distinguish between fats and oils based on their structure and properties.", a: "Fats are rich in saturated fatty acids, allowing their straight chains to pack closely, making them solids at room temperature. Oils are rich in unsaturated fatty acids, whose 'kinks' prevent close packing, making them liquids at room temperature." },
+                // Detergents
+                { q: "What is the primary function of detergents, and what two categories do they fall into?", a: "Their primary function is to enhance water's cleaning ability. They fall into soapy detergents (soaps) and soapless (synthetic) detergents." },
+                { q: "Explain the amphiphilic nature of detergent molecules.", a: "They have two distinct parts: a long, non-polar hydrophobic tail that dissolves in grease, and a polar, ionic hydrophilic head that dissolves in water." },
+                { q: "How do the hydrophilic heads of soaps and synthetic detergents differ?", a: "Soaps have a carboxylate (\\(-COO^-\\)) head. Synthetic detergents typically have sulphonate (\\(-SO_3^-\\)) or sulphate (\\(-OSO_3^-\\)) heads." },
+                { q: "What is hard water and how does it affect soaps?", a: "Hard water contains dissolved \\(Ca^{2+}\\) and \\(Mg^{2+}\\) ions. Soaps react with these ions to form an insoluble precipitate called scum, which reduces their effectiveness." },
+                { q: "What are soaps chemically and how are they produced?", a: "They are sodium or potassium salts of long-chain fatty acids, produced by the alkaline hydrolysis (saponification) of fats and oils." },
+                { q: "Explain the cleaning action of a soap molecule.", a: "The hydrophobic tails dissolve in grease, while the hydrophilic heads stay in the water. Agitation breaks the grease into small droplets (micelles) which are emulsified in the water and washed away." },
+                { q: "List three common types of soapless detergents.", a: "1. Anionic (e.g., sodium alkylbenzene sulphonates). 2. Cationic (e.g., quaternary ammonium salts). 3. Non-ionic (e.g., polyoxyethylene derivatives)." },
+                { q: "Outline the industrial manufacture of sodium alkylbenzene sulphonates.", a: "It involves three main steps: 1. Alkylation of benzene. 2. Sulphonation of the alkylbenzene. 3. Neutralization of the resulting sulphonic acid with NaOH." },
+                { q: "What are two significant advantages of soapless detergents over soaps?", a: "1. They work effectively in hard water because their calcium and magnesium salts are soluble. 2. They remain effective in acidic solutions." },
+                { q: "What is eutrophication and how can detergents cause it?", a: "Eutrophication is the excessive growth of algae in water bodies. It can be caused by phosphates used as 'builders' in detergents, which act as nutrients for algae. The subsequent decay of the algae depletes oxygen in the water." },
+                // Polymers
+                { q: "Define polymers, monomers, and polymerization.", a: "Polymers are large macromolecules composed of many repeating structural units derived from smaller molecules called monomers. Polymerization is the process of linking these monomers." },
+                { q: "Classify polymers based on their source.", a: "1. Natural (e.g., rubber, cellulose). 2. Synthetic (e.g., polyethene, nylon). 3. Semi-synthetic (e.g., cellulose acetate)." },
+                { q: "What are the two main types of polymerization reactions?", a: "Addition polymerization and Condensation polymerization." },
+                { q: "Distinguish between linear, branched, and cross-linked polymers.", a: "Linear polymers have straight chains. Branched polymers have side chains. Cross-linked polymers have adjacent chains joined by covalent bonds, forming a 3D network." },
+                { q: "Define addition polymerization and its key characteristic.", a: "It is the process where unsaturated monomers add to each other sequentially to form a polymer chain without the loss of any small molecules. The empirical formula of the polymer is the same as the monomer." },
+                { q: "Outline the three main steps of addition polymerization.", a: "1. Chain Initiation (formation of an active species). 2. Chain Propagation (sequential addition of monomers). 3. Chain Termination (stopping the chain growth)." },
+                { q: "For Polyethene, name its monomer, repeating unit, and uses.", a: "Monomer: Ethene (\\(CH_2=CH_2\\)). Repeating Unit: \\(-[CH_2-CH_2]-_n\\). Uses: Packaging films, bags, bottles." },
+                { q: "For PVC, name its monomer, repeating unit, and uses.", a: "Monomer: Chloroethene (vinyl chloride, \\(CH_2=CHCl\\)). Repeating Unit: \\(-[CH_2-CHCl]-_n\\). Uses: Pipes, window frames, flooring." },
+                { q: "For PTFE, name its monomer, repeating unit, and uses.", a: "Monomer: Tetrafluoroethene (\\(CF_2=CF_2\\)). Repeating Unit: \\(-[CF_2-CF_2]-_n\\). Uses: Non-stick coatings (Teflon), seals." },
+                { q: "For Perspex, name its monomer, repeating unit, and uses.", a: "Monomer: Methyl methacrylate. Repeating Unit: \\(-[CH_2-C(CH_3)(COOCH_3)]-_n\\). Uses: Transparent sheets, lenses." },
+                { q: "How is the degree of polymerization calculated?", a: "Degree of polymerization (n) = (Relative molecular mass of polymer) / (Relative molecular mass of monomer)." },
+                { q: "Define condensation polymerization and its key characteristics.", a: "It is a process where monomers with two or more functional groups react to form a polymer with the elimination of a small molecule (like water). The empirical formula of the polymer differs from that of the monomers." },
+                { q: "For Nylon 6,6, identify its monomers and the type of linkage formed.", a: "Monomers: Hexane-1,6-diamine and Hexane-1,6-dioic acid. Linkage: Amide linkage (-CO-NH-)." },
+                { q: "What is vulcanization and how does it improve rubber properties?", a: "Vulcanization is the process of heating raw rubber with sulphur. This forms sulphur cross-links between the polymer chains, which increases the rubber's strength, elasticity, and temperature stability." }
+            ];
+
+            // --- DOM Elements ---
+            const contentWrapper = document.getElementById('content-wrapper').querySelector('.max-w-4xl');
+            const mainNav = document.getElementById('main-nav').querySelector('ul');
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const sideMenu = document.getElementById('side-menu');
+            const menuOverlay = document.getElementById('menu-overlay');
+
+            let currentSlide = 0;
+
+            // --- Functions ---
+
+            function initialize() {
+                slidesData.forEach((slide, index) => {
+                    const slideElement = document.createElement('section');
+                    slideElement.id = `slide-${index}`;
+                    slideElement.className = 'slide bg-white p-6 md:p-8 rounded-lg shadow-lg';
+                    slideElement.style.display = 'none';
+                    
+                    const titleElement = document.createElement('h2');
+                    titleElement.className = 'mb-6 text-3xl font-bold text-gray-800 border-b pb-3';
+                    titleElement.innerHTML = slide.title;
+                    
+                    const contentElement = document.createElement('div');
+                    contentElement.className = 'prose max-w-none text-gray-700 leading-relaxed';
+                    contentElement.innerHTML = slide.content;
+
+                    slideElement.appendChild(titleElement);
+                    slideElement.appendChild(contentElement);
+                    contentWrapper.appendChild(slideElement);
+
+                    if (slide.title === "Revision Questions") {
+                        const questionsContainer = slideElement.querySelector('.space-y-4');
+                        revisionQuestions.forEach((item, qIndex) => {
+                            const detail = document.createElement('details');
+                            const summary = document.createElement('summary');
+                            summary.innerHTML = `<div class="flex-grow">${qIndex + 1}. ${item.q}</div>`;
+                            
+                            const answerDiv = document.createElement('div');
+                            answerDiv.className = 'answer-content';
+                            answerDiv.innerHTML = `<p>${item.a}</p>`;
+
+                            detail.appendChild(summary);
+                            detail.appendChild(answerDiv);
+                            questionsContainer.appendChild(detail);
+                        });
+                    }
+                });
+
+                slidesData.forEach((slide, index) => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = slide.title;
+                    a.dataset.index = index;
+                    a.className = 'side-nav-link block p-3 rounded-md transition-colors duration-200 hover:bg-gray-700';
+                    li.appendChild(a);
+                    mainNav.appendChild(li);
+                });
+
+                showSlide(0, true);
+                setupEventListeners();
+            }
+
+            function renderMath(element) {
+                if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                    window.MathJax.startup.promise.then(() => {
+                        window.MathJax.typesetPromise(element ? [element] : []);
+                    }).catch((err) => console.error('MathJax typeset failed: ', err));
+                }
+            }
+
+            function showSlide(index, isInitialLoad = false) {
+                if (index < 0 || index >= slidesData.length) return;
+                currentSlide = index;
+                
+                document.querySelectorAll('.slide').forEach(slide => {
+                    slide.style.display = 'none';
+                });
+                
+                const slideToShow = document.getElementById(`slide-${index}`);
+                slideToShow.style.display = 'block';
+                document.getElementById('content-wrapper').scrollTop = 0;
+                
+                renderMath(slideToShow);
+                updateUI();
+            }
+            
+            function updateUI() {
+                updateNavButtons();
+                updateActiveLink();
+                updateBreadcrumbs();
+            }
+
+            function updateNavButtons() {
+                prevBtn.disabled = currentSlide === 0;
+                nextBtn.disabled = currentSlide === slidesData.length - 1;
+            }
+
+            function updateActiveLink() {
+                document.querySelectorAll('.side-nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (parseInt(link.dataset.index) === currentSlide) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            function updateBreadcrumbs() {
+                breadcrumbs.innerHTML = `Home / <span class="text-gray-900">${slidesData[currentSlide].title}</span>`;
+            }
+            
+            function toggleMenu() {
+                sideMenu.classList.toggle('-translate-x-full');
+                menuOverlay.classList.toggle('hidden');
+            }
+
+            function setupEventListeners() {
+                nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+                prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+                
+                mainNav.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (link && link.dataset.index) {
+                        e.preventDefault();
+                        const index = parseInt(link.dataset.index);
+                        showSlide(index);
+                        if (window.innerWidth < 768) {
+                           toggleMenu();
+                        }
+                    }
+                });
+
+                hamburgerBtn.addEventListener('click', toggleMenu);
+                menuOverlay.addEventListener('click', toggleMenu);
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

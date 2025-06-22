@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metals: An Interactive Guide</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathJax Configuration and CDN -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Internal CSS for Layout Control and Styling -->
+    <style>
+        /* Prevents the main browser window from scrolling */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a8a8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Style for the active link in the side navigation */
+        .side-nav-link.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 4px solid #ffffff;
+        }
+
+        /* Custom styles for details/summary to create accordion-like elements */
+        details > summary {
+            list-style: none; /* Remove default marker */
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background-color: #f3f4f6; /* gray-100 */
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: start; /* Align to top to fix layout with LaTeX */
+            transition: background-color 0.2s;
+        }
+
+        details > summary:hover {
+             background-color: #e5e7eb; /* gray-200 */
+        }
+
+        details > summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 300;
+            transition: transform 0.3s ease-in-out;
+            margin-left: 1rem; /* Space between text and icon */
+            flex-shrink: 0;
+        }
+        
+        details[open] > summary::after {
+            transform: rotate(45deg);
+        }
+
+        details .answer-content {
+            padding: 1rem;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            margin-top: -0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen overflow-hidden bg-gray-100">
+        <!-- Side Navigation Menu -->
+        <aside id="side-menu" class="fixed top-0 left-0 z-40 w-64 h-full bg-gray-800 text-white transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0">
+            <div class="p-5 border-b border-gray-700">
+                <h1 class="text-2xl font-bold">Metals</h1>
+                <p class="text-sm text-gray-400">Chemistry Guide</p>
+            </div>
+            <nav id="main-nav" class="p-4 overflow-y-auto h-[calc(100%-80px)]">
+                <ul class="space-y-1">
+                    <!-- Navigation links will be dynamically populated and handled by JS -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Overlay for mobile view when side menu is open -->
+        <div id="menu-overlay" class="fixed inset-0 z-30 hidden bg-black bg-opacity-50 md:hidden"></div>
+
+        <!-- Main Content Area -->
+        <div class="flex flex-col flex-1 w-full h-full overflow-hidden">
+            <!-- Header: Hamburger Menu and Breadcrumbs -->
+            <header class="flex items-center justify-between flex-shrink-0 p-4 bg-white border-b border-gray-200">
+                <button id="hamburger-btn" class="p-2 text-gray-600 rounded-md md:hidden" aria-label="Open Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <nav id="breadcrumbs" class="text-sm text-gray-500 font-medium">
+                    <!-- Breadcrumbs will be dynamically populated by JS -->
+                </nav>
+            </header>
+
+            <!-- Content Slides Wrapper -->
+            <main id="content-wrapper" class="flex-1 p-4 overflow-y-auto md:p-6 lg:p-8">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <!-- Slides will be injected here from the slidesData object -->
+                </div>
+            </main>
+            
+            <!-- Navigation Buttons Footer -->
+            <footer class="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+                <div class="flex justify-between max-w-4xl mx-auto">
+                    <button id="prev-btn" class="px-6 py-2 font-semibold text-white bg-gray-500 rounded-lg shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <button id="next-btn" class="px-6 py-2 font-semibold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const slidesData = [
+                {
+                    title: "The Nature of Metals",
+                    content: `
+                        <p class="text-lg mb-4">Metals are a class of elements defined by their unique properties, which arise from their atomic structure. Typically, metal atoms have 1 to 3 electrons in their outermost energy level, which they readily lose to form positive ions (cations).</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">The Metallic Bond</h3>
+                        <p class="mb-4">The distinctive properties of metals come from the <strong>metallic bond</strong>. This is the electrostatic force of attraction between a lattice of positive metal ions and a "sea" of delocalized electrons that move freely throughout the structure. The strength of this bond depends on:</p>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700">
+                            <li>The number of valence electrons donated to the sea (more electrons = stronger bond).</li>
+                            <li>The charge on the metal ion (higher charge = stronger attraction).</li>
+                            <li>The size of the ion (smaller ions pack more closely, leading to stronger bonds).</li>
+                        </ul>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border">
+                            <h4 class="font-semibold text-gray-800">Physical Properties</h4>
+                            <p>This bonding model explains the typical properties of metals: high conductivity, lustre, malleability, ductility, high density, and high melting/boiling points.</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "The Reactivity Series",
+                    content: `
+                        <p class="mb-4">The chemical reactivity of metals is systematically organized in the <strong>reactivity series</strong> (or electrochemical series), which arranges metals in descending order of their tendency to lose electrons.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Key Principles</h3>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700">
+                           <li><strong>Position & Reactivity:</strong> Metals at the top (e.g., Potassium, Sodium) are highly reactive. Metals at the bottom (e.g., Copper, Silver, Gold) are unreactive.</li>
+                           <li><strong>Reducing Power:</strong> Metals higher in the series are stronger reducing agents.</li>
+                           <li><strong>Electrode Potentials (E°):</strong> The series correlates directly with standard electrode potentials. More reactive metals have more negative E° values.</li>
+                        </ul>
+                        <div class="mt-6 p-4 bg-gray-50 rounded-lg border">
+                            <h4 class="font-semibold text-gray-800">Applications of the Series</h4>
+                            <p>The position of a metal in the series dictates:</p>
+                            <ul class="list-['-_'] pl-5 mt-1 space-y-1">
+                                <li>The method required for its extraction from ores.</li>
+                                <li>Its reactions with water, air, and acids.</li>
+                                <li>Its potential role as an anode or cathode in an electrochemical cell.</li>
+                            </ul>
+                        </div>
+                    `
+                },
+                {
+                    title: "Ore Extraction & Processing",
+                    content: `
+                        <p class="mb-4">An <strong>ore</strong> is a naturally occurring rock from which a metal can be economically extracted. The process begins with ore concentration to remove unwanted material (gangue).</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Ore Concentration Methods</h3>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700">
+                           <li><strong>Froth Flotation:</strong> Used widely for sulphide ores (e.g., \\(CuFeS_2\\), \\(ZnS\\)). Crushed ore is mixed with water and reagents. Air is bubbled through, and valuable mineral particles attach to the bubbles, forming a froth that is skimmed off.</li>
+                           <li><strong>Magnetic Separation:</strong> For magnetic ores like magnetite (\\(Fe_3O_4\\)).</li>
+                           <li><strong>Gravity Separation:</strong> Uses density differences to separate heavier minerals from lighter gangue.</li>
+                        </ul>
+                        <div class="mt-4 text-center bg-gray-100 p-6 rounded-lg">
+                            <p class="font-semibold">[Diagram: Froth Flotation Cell]</p>
+                            <p class="text-sm text-gray-600 mt-2">A diagram showing the setup of a flotation cell with the air inlet, paddle for skimming froth, and outlets for concentrate and tailings.</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Extraction Methods",
+                    content: `
+                        <p class="mb-4">The method used to extract a metal from its concentrated ore depends on the metal's position in the reactivity series.</p>
+                        <div class="space-y-4">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">1. Electrolysis</h4>
+                                <p>Used for <strong>highly reactive metals</strong> (e.g., Na, Al, Mg). Their compounds are very stable and require the strong reducing power of electricity to decompose their molten ores.</p>
+                                <p class="mt-1 font-semibold">Examples: Down's Process (Sodium), Hall-Héroult Process (Aluminium).</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">2. Reduction with Carbon/CO</h4>
+                                <p>Used for <strong>moderately reactive metals</strong> (e.g., Fe, Zn, Pb). Their oxides are heated with a reducing agent like carbon (coke) or carbon monoxide in a blast furnace.</p>
+                                <p class="mt-1 font-semibold">Example: Iron extraction in a Blast Furnace.</p>
+                            </div>
+                             <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">3. Simpler Methods</h4>
+                                <p>Used for <strong>least reactive metals</strong> (e.g., Cu, Ag). These metals can be extracted by simpler reduction or may even be found uncombined (native) in nature.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                 {
+                    title: "Key Extraction Processes",
+                    content: `
+                        <p class="mb-6">This section details the industrial processes for extracting key metals.</p>
+                        <div class="space-y-6">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">Iron in the Blast Furnace</h4>
+                                <p>Iron is extracted from haematite (\\(Fe_2O_3\\)) using coke (carbon) as both a fuel and the source of the reducing agent, carbon monoxide (\\(CO\\)). Limestone (\\(CaCO_3\\)) is added as a flux to remove silica impurities as molten slag (\\(CaSiO_3\\)).</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">Sodium by the Down's Process</h4>
+                                <p>Sodium is extracted by the electrolysis of molten sodium chloride. Calcium chloride (\\(CaCl_2\\)) is added to lower the melting point from 801°C to ~600°C. A steel gauze diaphragm separates the sodium and chlorine products.</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">Aluminium by the Hall-Héroult Process</h4>
+                                <p>Purified alumina (\\(Al_2O_3\\)) is dissolved in molten cryolite (\\(Na_3AlF_6\\)) to lower the operating temperature to ~950°C. During electrolysis, the carbon anodes are consumed as they react with the oxygen produced.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Alloys and Their Uses",
+                    content: `
+                        <p class="mb-4">An <strong>alloy</strong> is a metallic substance composed of two or more elements, designed to enhance properties like strength, hardness, and corrosion resistance. Alloying distorts the regular lattice structure, making it harder for atomic layers to slide.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Common Industrial Alloys</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                    <tr><th class="px-4 py-2">Alloy</th><th class="px-4 py-2">Composition</th><th class="px-4 py-2">Uses</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Mild Steel</td><td class="px-4 py-2">Fe (>99%), C (0.05-0.3%)</td><td class="px-4 py-2">Car bodies, structural beams, nails</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Stainless Steel</td><td class="px-4 py-2">Fe (74%), Cr (18%), Ni (8%)</td><td class="px-4 py-2">Cutlery, sinks, surgical instruments</td></tr>
+                                    <tr class="bg-white border-b"><td class="px-4 py-2 font-medium">Duralumin</td><td class="px-4 py-2">Al (~94%), Cu (4%), Mg, Mn</td><td class="px-4 py-2">Aircraft frames, automotive parts</td></tr>
+                                    <tr class="bg-gray-50 border-b"><td class="px-4 py-2 font-medium">Brass</td><td class="px-4 py-2">Cu (60-70%), Zn (30-40%)</td><td class="px-4 py-2">Plumbing fittings, musical instruments</td></tr>
+                                    <tr class="bg-white"><td class="px-4 py-2 font-medium">Bronze</td><td class="px-4 py-2">Cu (~88%), Sn (~12%)</td><td class="px-4 py-2">Bearings, statues, marine hardware</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    `
+                },
+                {
+                    title: "Environmental Impact",
+                    content: `
+                        <p class="mb-4">The metals industry has significant environmental impacts that require careful management.</p>
+                        <div class="space-y-4">
+                            <p><strong>Land Disturbance:</strong> Mining causes deforestation, soil erosion, and habitat loss.</p>
+                            <p><strong>Air Pollution:</strong> Smelting processes release harmful gases.
+                                <ul class="list-['-_'] pl-5 mt-1 space-y-1">
+                                    <li><strong>Sulphur Dioxide (\\(SO_2\\)):</strong> From roasting sulphide ores (e.g., \\(2ZnS + 3O_2 \\rightarrow 2ZnO + 2SO_2\\)), causing acid rain.</li>
+                                    <li><strong>Carbon Dioxide (\\(CO_2\\)):</strong> A greenhouse gas from the use of coke as a reducing agent and the consumption of carbon anodes.</li>
+                                </ul>
+                            </p>
+                            <p><strong>Water Pollution:</strong> Effluents from processing plants and acid mine drainage can contaminate water sources with heavy metals and acids.</p>
+                             <div class="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                                <h4 class="font-semibold text-green-800">Mitigation and Recycling</h4>
+                                <p>Sustainable practices are crucial. Modern smelters capture \\(SO_2\\) to produce sulphuric acid. Responsible waste management and land reclamation are essential. Most importantly, <strong>recycling</strong> metals significantly reduces environmental impact by conserving resources and saving enormous amounts of energy (e.g., recycling aluminium uses only ~5% of the energy of primary production).</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Key Experiments & Worked Examples",
+                    content: `
+                        <p class="mb-6">This section covers key laboratory experiments and provides worked examples of calculations related to metal extraction.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Key Experiments</h3>
+                        <div class="space-y-4 mb-8">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">1. Comparing Metal Reactivity with Water</h4>
+                                <p><strong>Procedure:</strong> Add small pieces of different metals (e.g., Na, Ca, Mg, Zn) to cold water and observe the rate of effervescence (hydrogen production). Repeat with steam for less reactive metals.</p>
+                                <p><strong>Conclusion:</strong> Establishes a reactivity order (e.g., Na > Ca > Mg > Zn).</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">2. Displacement Reactions</h4>
+                                <p><strong>Procedure:</strong> Place a piece of metal (e.g., zinc) into a solution containing the ions of another metal (e.g., copper(II) sulphate). Observe changes like color fading or solid deposition.</p>
+                                <p><strong>Conclusion:</strong> A more reactive metal will displace a less reactive metal from its salt solution, confirming their relative positions in the reactivity series.</p>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Worked Examples</h3>
+                        <div class="space-y-4">
+                            <details>
+                                <summary>Example 1: Calculating Mass of Metal Produced</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">Calculate the theoretical mass of iron that can be obtained from 200 tonnes of haematite ore (\\(Fe_2O_3\\)) that is 80% pure. (Fe = 56, O = 16).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Find the mass of pure haematite:</strong><br>Mass = 80% of 200 tonnes = 0.80 × 200 = 160 tonnes.</li>
+                                        <li><strong>Find the molar mass of \\(Fe_2O_3\\):</strong><br>Molar Mass = (2 × 56) + (3 × 16) = 112 + 48 = 160 g/mol.</li>
+                                        <li><strong>Find the mass of iron in one mole of \\(Fe_2O_3\\):</strong><br>Mass of Fe = 2 × 56 = 112 g.</li>
+                                        <li><strong>Calculate the mass of iron obtainable:</strong><br>From 160 g of \\(Fe_2O_3\\), we get 112 g of Fe.<br>From 160 tonnes of \\(Fe_2O_3\\), we get: \\( \\frac{112}{160} \\times 160 \\text{ tonnes} = 112 \\text{ tonnes}\\).</li>
+                                    </ol>
+                                </div>
+                            </details>
+                             <details>
+                                <summary>Example 2: Calculating Percentage Purity</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">10.0 g of an impure sample of limestone (\\(CaCO_3\\)) was heated until all the carbonate decomposed. 4.0 g of carbon dioxide gas was collected. Calculate the percentage purity of the limestone sample. (Ca=40, C=12, O=16).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Write the balanced equation:</strong><br>\\(CaCO_3(s) \\rightarrow CaO(s) + CO_2(g)\\)</li>
+                                        <li><strong>Calculate molar masses:</strong><br>Molar Mass of \\(CaCO_3\\) = 40 + 12 + (3 × 16) = 100 g/mol.<br>Molar Mass of \\(CO_2\\) = 12 + (2 × 16) = 44 g/mol.</li>
+                                        <li><strong>Find the mass of pure \\(CaCO_3\\) that produced 4.0 g of \\(CO_2\\):</strong><br>From the equation, 100 g of \\(CaCO_3\\) produces 44 g of \\(CO_2\\).<br>Mass of \\(CaCO_3\\) = \\( \\frac{100 g}{44 g} \\times 4.0 g = 9.09 g\\).</li>
+                                        <li><strong>Calculate the percentage purity:</strong><br>Percentage Purity = \\(\\frac{\\text{Mass of pure } CaCO_3}{\\text{Total mass of sample}} \\times 100\\% = \\frac{9.09 g}{10.0 g} \\times 100\\% = 90.9\\%\\).</li>
+                                    </ol>
+                                </div>
+                            </details>
+                             <details>
+                                <summary>Example 3: Volume of Gas from Reaction with Acid</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">Calculate the volume of hydrogen gas, measured at r.t.p., produced when 13.0 g of zinc reacts completely with excess dilute hydrochloric acid. (Zn = 65, Molar gas volume at r.t.p. = 24 L/mol).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Write the balanced equation:</strong><br>\\(Zn(s) + 2HCl(aq) \\rightarrow ZnCl_2(aq) + H_2(g)\\)</li>
+                                        <li><strong>Calculate moles of zinc:</strong><br>Moles = Mass / Molar mass = 13.0 g / 65 g/mol = 0.2 mol.</li>
+                                        <li><strong>Use stoichiometry to find moles of hydrogen:</strong><br>From the equation, the mole ratio of Zn to \\(H_2\\) is 1:1.<br>Therefore, moles of \\(H_2\\) produced = 0.2 mol.</li>
+                                        <li><strong>Calculate the volume of hydrogen gas:</strong><br>Volume = Moles × Molar Volume = 0.2 mol × 24 L/mol = 4.8 L.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                            <details>
+                                <summary>Example 4: Alloy Composition</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">A 20.0 g piece of brass, an alloy of copper and zinc, was reacted with excess dilute hydrochloric acid. The zinc reacted completely, leaving the copper behind. 6.72 L of hydrogen gas was collected at s.t.p. Calculate the percentage of copper in the brass alloy. (Zn=65, Molar gas volume at s.t.p. = 22.4 L/mol).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Note the reacting species:</strong><br>Only zinc reacts with HCl; copper does not. The reaction is \\(Zn(s) + 2HCl(aq) \\rightarrow ZnCl_2(aq) + H_2(g)\\).</li>
+                                        <li><strong>Calculate moles of hydrogen produced:</strong><br>Moles of \\(H_2\\) = Volume / Molar Volume = 6.72 L / 22.4 L/mol = 0.3 mol.</li>
+                                        <li><strong>Find moles of zinc that reacted:</strong><br>From the equation, the mole ratio of Zn to \\(H_2\\) is 1:1.<br>Therefore, moles of Zn = 0.3 mol.</li>
+                                        <li><strong>Calculate the mass of zinc in the alloy:</strong><br>Mass of Zn = Moles × Molar mass = 0.3 mol × 65 g/mol = 19.5 g.</li>
+                                        <li><strong>Calculate the mass and percentage of copper:</strong><br>Mass of Cu = Total mass - Mass of Zn = 20.0 g - 19.5 g = 0.5 g.<br>Percentage of Cu = \\(\\frac{\\text{Mass of Cu}}{\\text{Total mass}} \\times 100\\% = \\frac{0.5 g}{20.0 g} \\times 100\\% = 2.5\\%\\).</li>
+                                    </ol>
+                                </div>
+                            </details>
+                        </div>
+                    `
+                },
+                {
+                    title: "Revision Questions",
+                    content: `
+                        <p class="mb-6">Test your understanding of the chapter with these 90 revision questions. Click on a question to reveal the answer.</p>
+                        <div class="space-y-4">
+                            <!-- Questions will be generated here by JS -->
+                        </div>
+                    `
+                }
+            ];
+
+            const revisionQuestions = [
+                { q: "Define a metal in terms of its electronic structure and its general position in the periodic table.", a: "A metal is an element whose atoms typically have 1, 2, or 3 electrons in their outermost energy level. They readily lose these valence electrons to form positive ions (cations). In the periodic table, metals are located on the left side and in the central transition block." },
+                { q: "Explain the concept of electropositivity. Describe its trend down a group and across a period.", a: "Electropositivity is the measure of an atom's ability to lose valence electrons to form a positive ion. Down a group, electropositivity increases because the atomic radius increases and shielding by inner electrons reduces the nucleus's pull on valence electrons. Across a period, it decreases because increasing nuclear charge pulls the valence electrons more strongly." },
+                { q: "Describe the metallic bond.", a: "The metallic bond is the electrostatic force of attraction between a regular lattice of positive metal ions and a 'sea' of delocalized valence electrons that are free to move throughout the structure. This 'electron sea' holds the entire structure together." },
+                { q: "Identify and explain three factors that influence the strength of the metallic bond.", a: "1. <strong>Number of Delocalized Electrons:</strong> More valence electrons contributed per atom results in a stronger bond (e.g., Al > Mg > Na). 2. <strong>Ionic Charge:</strong> A higher positive charge on the metal ions leads to a stronger electrostatic attraction to the electron sea. 3. <strong>Ionic Radius:</strong> Smaller ions allow for closer packing and a higher charge density, resulting in stronger bonds." },
+                { q: "List five general physical properties characteristic of metals.", a: "1. Good conductors of heat and electricity. 2. High melting and boiling points. 3. Malleable (can be hammered into sheets). 4. Ductile (can be drawn into wires). 5. Lustrous (shiny) when polished." },
+                { q: "Explain why metals are excellent conductors of both heat and electricity.", a: "This is due to the presence of mobile, delocalized valence electrons. These electrons are free to move and carry charge when a voltage is applied (electrical conductivity) and can transfer kinetic energy efficiently when heated (thermal conductivity)." },
+                { q: "What causes the metallic lustre observed when metal surfaces are freshly cut or polished?", a: "The free electrons in the 'electron sea' can absorb photons of light and then immediately re-emit them, giving the surface a shiny, reflective appearance." },
+                { q: "Define malleability and ductility and explain the underlying reason for these properties in metals.", a: "Malleability is the ability to be hammered into thin sheets. Ductility is the ability to be drawn into wires. These properties exist because the layers of metal ions can slide over one another without breaking the metallic bond, as the delocalized electron sea can adjust to the new positions." },
+                { q: "Why do metals generally possess high densities?", a: "Metals have high densities because their atoms are typically packed closely and efficiently in a regular crystal lattice structure, and they have relatively high atomic masses." },
+                { q: "Explain why metals typically exhibit high melting and boiling points.", a: "This is due to the strength of the metallic bonds holding the atoms together. A large amount of thermal energy is required to overcome these strong electrostatic forces between the positive ions and the delocalized electrons." },
+                { q: "How does the number of valence electrons influence the melting point of metals? Provide a comparative example.", a: "A greater number of valence electrons contributed per atom leads to a stronger metallic bond and thus a higher melting point. For example, Aluminium (3 valence electrons, MP 660°C) has a higher melting point than Magnesium (2 valence electrons, MP 650°C), which is higher than Sodium (1 valence electron, MP 98°C)." },
+                { q: "What is the reactivity series of metals, and how are metals generally arranged within it?", a: "It is a list that arranges metals in descending order of their chemical reactivity (their readiness to lose electrons). Highly reactive metals like Potassium are at the top, and unreactive metals like Gold are at the bottom." },
+                { q: "How is the chemical reactivity of a metal quantitatively linked to its standard electrode potential (E° value)?", a: "A metal's reactivity is directly related to its standard electrode potential (E°). More reactive metals (stronger reducing agents) have more negative E° values, indicating a greater tendency to be oxidized." },
+                { q: "Give two practical implications of a metal's position within the reactivity series.", a: "1. It determines the method of extraction from its ore (e.g., electrolysis for reactive metals). 2. It predicts the outcome of displacement reactions (a more reactive metal displaces a less reactive one from its salt solution)." },
+                { q: "Explain how a metal's position in the periodic table can serve as an indicator of its properties and extraction method.", a: "Its position indicates the number of valence electrons, influencing bond strength and reactivity. This reactivity, in turn, dictates the stability of its compounds and the energy required for extraction (e.g., Group 1 metals are highly reactive and require electrolysis)." },
+                { q: "Define an ore and distinguish it from a chief ore.", a: "An ore is a naturally occurring rock from which a metal can be extracted economically. A chief ore is the primary or most common ore used for the large-scale commercial extraction of a particular metal." },
+                { q: "List four common chemical forms in which metal ores are naturally found.", a: "1. Oxides (e.g., Haematite, \\(Fe_2O_3\\)). 2. Sulphides (e.g., Galena, \\(PbS\\)). 3. Carbonates (e.g., Calamine, \\(ZnCO_3\\)). 4. Chlorides (e.g., Rock Salt, \\(NaCl\\))." },
+                { q: "Name the chief ore for iron and provide its chemical formula.", a: "The chief ore for iron is Haematite, with the chemical formula \\(Fe_2O_3\\)." },
+                { q: "Name the chief ores for zinc and provide their chemical formulas.", a: "The chief ores for zinc are Zinc Blende (\\(ZnS\\)) and Calamine (\\(ZnCO_3\\))." },
+                { q: "Why is ore concentration considered a crucial preliminary step before metal extraction?", a: "It is crucial because most ores have a low percentage of the desired metal mixed with unwanted rock (gangue). Concentration increases the metal content, which makes the subsequent extraction process more energy-efficient and economically viable by reducing the volume of material to be processed." },
+                { q: "Describe the froth flotation process, including its principle and the roles of key reagents.", a: "Froth flotation is a method to concentrate ores, especially sulphide ores. Principle: It exploits differences in the surface properties of the mineral and gangue. Reagents: A 'collector' makes the mineral particles hydrophobic (water-repelling), while a 'frother' (like pine oil) stabilizes air bubbles. Process: Air is bubbled through a slurry of ground ore and water. The hydrophobic mineral particles attach to the air bubbles and float to the surface as a froth, which is skimmed off, leaving the hydrophilic gangue behind." },
+                { q: "Name three other methods of ore concentration apart from froth flotation.", a: "1. Magnetic Separation (for magnetic ores). 2. Gravity Separation (based on density differences). 3. Leaching (dissolving the desired mineral in a solvent)." },
+                { q: "What are gangue materials in the context of ore processing?", a: "Gangue is the unwanted earthy or rocky material that is commercially worthless, which is mixed with the valuable mineral in an ore." },
+                { q: "Explain how the chemical nature of a metal ore dictates its preliminary processing.", a: "The chemical form determines the conversion method needed. Sulphide ores are typically roasted in air to form oxides (e.g., \\(2ZnS + 3O_2 \\rightarrow 2ZnO + 2SO_2\\)). Carbonate ores are heated (calcined) to form oxides (e.g., \\(ZnCO_3 \\rightarrow ZnO + CO_2\\)). These oxides are then easier to reduce to the metal." },
+                { q: "How does ore concentration contribute to the economic viability of metal production?", a: "By removing a large portion of waste rock early, it significantly reduces the mass and volume of material that needs to be transported and heated in the energy-intensive extraction furnaces, thereby lowering fuel costs and increasing the efficiency of the smelter." },
+                { q: "Explain how the method of extraction is linked to a metal's position in the reactivity series.", a: "Highly reactive metals (top of series) form very stable compounds and require energy-intensive electrolysis. Moderately reactive metals (middle) form less stable oxides that can be reduced by carbon/CO in a furnace. Least reactive metals (bottom) have unstable compounds and require only simple reduction or are found native." },
+                { q: "Distinguish between the extraction methods for highly reactive and moderately reactive metals based on thermodynamic principles.", a: "For highly reactive metals, the reduction of their oxides by carbon is non-spontaneous (positive \\(\\Delta G\\)) at practical furnace temperatures, so electrolysis is needed to provide the required energy. For moderately reactive metals, the reduction by carbon is thermodynamically favorable (negative \\(\\Delta G\\)) at high temperatures." },
+                { q: "State the three primary raw materials used in the extraction of iron in a blast furnace.", a: "1. Iron Ore (Haematite, \\(Fe_2O_3\\)). 2. Coke (Carbon). 3. Limestone (\\(CaCO_3\\))." },
+                { q: "Explain the dual role of coke in the blast furnace.", a: "1. As a Fuel: It burns in hot air to generate the high temperatures required for the process (\\(C + O_2 \\rightarrow CO_2\\)). 2. As a Reducing Agent Source: It reacts with \\(CO_2\\) at high temperatures to produce carbon monoxide (\\(C + CO_2 \\rightarrow 2CO\\)), which is the main reducing agent." },
+                { q: "Describe how carbon monoxide is formed in the blast furnace and why it is the primary reducing agent.", a: "It is formed when hot carbon dioxide from the initial combustion rises and reacts with more hot coke: \\(CO_2 + C \\rightarrow 2CO\\). It is the primary reducing agent because, as a gas, it makes better contact with the solid iron ore particles, leading to a faster and more efficient reduction than solid coke." },
+                { q: "What is the purpose of limestone in the blast furnace? Include relevant chemical equations.", a: "Limestone acts as a flux to remove acidic impurities like silica (\\(SiO_2\\)). It first decomposes: \\(CaCO_3(s) \\rightarrow CaO(s) + CO_2(g)\\). The basic calcium oxide then reacts with the silica to form molten calcium silicate slag: \\(CaO(s) + SiO_2(s) \\rightarrow CaSiO_3(l)\\)." },
+                { q: "What is pig iron and what are its main impurities and properties?", a: "Pig iron is the impure molten iron from the blast furnace. Its main impurity is high carbon content (3-5%), along with Si, P, Mn, and S. These impurities make it very hard but brittle." },
+                { q: "Why is sodium extracted by electrolysis instead of chemical reduction?", a: "Sodium is a highly reactive metal, forming very stable compounds. Chemical reducing agents like carbon are not strong enough to reduce sodium ions from their compounds at practical temperatures. Electrolysis provides the necessary energy to force the reduction." },
+                { q: "In the Down's process, what is the crucial role of adding calcium chloride?", a: "Calcium chloride is added to the sodium chloride to significantly lower the melting point of the electrolyte from 801°C to about 600°C. This drastically reduces the energy costs required to keep the electrolyte molten." },
+                { q: "Write the electrode reactions at the cathode and anode in the Down's cell.", a: "Cathode (-): \\(2Na^+(l) + 2e^- \\rightarrow 2Na(l)\\). Anode (+): \\(2Cl^-(l) \\rightarrow Cl_2(g) + 2e^-\\)." },
+                { q: "What is the function of the steel gauze diaphragm in the Down's cell?", a: "Its function is to physically separate the molten sodium produced at the cathode from the chlorine gas produced at the anode, preventing them from reacting with each other, which would be dangerous and reduce the product yield." },
+                { q: "Outline the two main process stages involved in the extraction of aluminium.", a: "1. The Bayer Process: Purification of bauxite ore to obtain pure alumina (\\(Al_2O_3\\)). 2. The Hall-Héroult Process: Electrolysis of the alumina to produce molten aluminium." },
+                { q: "Describe the purpose and main chemical steps of the Bayer process.", a: "Purpose: To separate pure aluminium oxide from impurities in bauxite ore. Steps: 1. Digestion: Bauxite is digested in hot, concentrated \\(NaOH\\) solution. The amphoteric \\(Al_2O_3\\) dissolves, but basic impurities like \\(Fe_2O_3\\) do not. 2. Precipitation: The solution is cooled and seeded to precipitate pure \\(Al(OH)_3\\). 3. Calcination: The \\(Al(OH)_3\\) is heated strongly to form pure alumina, \\(Al_2O_3\\)." },
+                { q: "In the Hall-Héroult process, what is the specific role of molten cryolite?", a: "Cryolite (\\(Na_3AlF_6\\)) acts as a solvent for the alumina (\\(Al_2O_3\\)). Its crucial role is to lower the operating temperature from over 2000°C (the melting point of pure alumina) to a more manageable and economical ~950°C." },
+                { q: "Write the electrode reactions during the electrolysis of alumina.", a: "Cathode (-): \\(Al^{3+} + 3e^- \\rightarrow Al(l)\\). Anode (+): \\(2O^{2-} \\rightarrow O_2(g) + 4e^-\\)." },
+                { q: "Explain why the carbon anodes in the Hall-Héroult process are consumed.", a: "The oxygen gas produced at the positive anodes is at a very high temperature. It reacts directly with the hot carbon of the anodes, burning them away to form carbon dioxide gas (\\(C(s) + O_2(g) \\rightarrow CO_2(g)\\)). This requires their periodic replacement." },
+                { q: "Describe the preliminary roasting steps for zinc ores.", a: "Zinc blende (\\(ZnS\\)) is roasted in air to form zinc oxide: \\(2ZnS + 3O_2 \\rightarrow 2ZnO + 2SO_2\\). Calamine (\\(ZnCO_3\\)) is heated (calcined) to form zinc oxide: \\(ZnCO_3 \\rightarrow ZnO + CO_2\\)." },
+                { q: "How is zinc oxide reduced to zinc metal in a furnace?", a: "The zinc oxide is mixed with powdered coke (carbon) and heated strongly in a furnace. The carbon acts as a reducing agent: \\(ZnO(s) + C(s) \\rightarrow Zn(g) + CO(g)\\)." },
+                { q: "Explain why zinc is produced as a vapor and how it is collected.", a: "Zinc has a relatively low boiling point (913°C), which is below the temperature required for its reduction by carbon. Therefore, it is produced as a gas. The zinc vapor is collected by passing it through a condenser where it is rapidly cooled (quenched) to prevent it from re-oxidizing." },
+                { q: "Describe the extraction of lead from galena (PbS).", a: "1. Roasting: Galena is first roasted in air to convert it to lead(II) oxide (\\(2PbS + 3O_2 \\rightarrow 2PbO + 2SO_2\\)). 2. Smelting: The lead(II) oxide is then heated with coke (carbon) and limestone (flux) in a furnace, where it is reduced to molten lead." },
+                { q: "Why is iron sometimes added during lead extraction?", a: "Scrap iron may be added to reduce any lead sulphide that was not converted during roasting. Iron is more reactive than lead and can displace it: \\(PbS(s) + Fe(s) \\rightarrow Pb(l) + FeS(s)\\)." },
+                { q: "What is blister copper and why is it refined?", a: "Blister copper is the impure copper (~98-99% pure) produced from smelting. It is refined to produce high-purity copper (>99.95%), because even small amounts of impurities significantly reduce its electrical conductivity, making it unsuitable for most electrical applications." },
+                { q: "Describe the setup and electrode reactions for the electrolytic refining of copper.", a: "Setup: An impure copper block is the anode, a thin sheet of pure copper is the cathode, and the electrolyte is an aqueous solution of copper(II) sulphate. Reactions: At the anode (+), copper dissolves: \\(Cu \\rightarrow Cu^{2+} + 2e^-\\). At the cathode (-), pure copper deposits: \\(Cu^{2+} + 2e^- \\rightarrow Cu\\)." },
+                { q: "During copper refining, what happens to impurities (a) more reactive and (b) less reactive than copper?", a: "(a) More reactive impurities (like zinc, iron) also dissolve from the anode but remain as ions in the solution because they are harder to reduce than copper. (b) Less reactive impurities (like silver, gold) do not dissolve and fall to the bottom of the cell as anode sludge." },
+                { q: "Explain why the concentration of the electrolyte remains constant during copper refining.", a: "The rate at which copper dissolves from the anode into the electrolyte is approximately the same as the rate at which copper ions deposit from the electrolyte onto the cathode, keeping the concentration of \\(Cu^{2+}\\) ions stable." },
+                { q: "Define oxidation and reduction in terms of electrons and oxidation number.", a: "Oxidation is the loss of electrons, resulting in an increase in oxidation number. Reduction is the gain of electrons, resulting in a decrease in oxidation number." },
+                { q: "Distinguish between an oxidizing agent and a reducing agent.", a: "An oxidizing agent is a species that accepts electrons and gets reduced. A reducing agent is a species that donates electrons and gets oxidized." },
+                { q: "How does a metal's strength as a reducing agent relate to its position in the electrochemical series?", a: "Metals higher in the series (with more negative E° values) are stronger reducing agents because they have a greater tendency to lose electrons." },
+                { q: "Draw and label a diagram of a galvanic cell.", a: "[Placeholder: A diagram should show two separate beakers (half-cells), each with an electrode (e.g., Zn, Cu) in its corresponding ionic solution (e.g., \\(ZnSO_4\\), \\(CuSO_4\\)). The electrodes are connected by an external wire with a voltmeter, and the two solutions are connected by a salt bridge.]" },
+                { q: "State two crucial functions of a salt bridge.", a: "1. It completes the electrical circuit by connecting the two electrolytes. 2. It maintains charge neutrality in the half-cells by allowing the migration of ions, which prevents the build-up of positive and negative charges that would otherwise stop the cell from working." },
+                { q: "Define Standard Electrode Potential (E°) and list the standard conditions.", a: "E° is the potential of a half-cell measured under standard conditions relative to the Standard Hydrogen Electrode. The conditions are: 25°C (298 K), 1.0 M concentration for aqueous solutions, and 1 atm pressure for gases." },
+                { q: "What is the purpose of the Standard Hydrogen Electrode (SHE)?", a: "The SHE serves as the universal reference electrode for measuring all other electrode potentials. It is arbitrarily assigned a potential of exactly 0.00 volts." },
+                { q: "List three practical applications of standard electrode potentials.", a: "1. Calculating the EMF of a galvanic cell. 2. Predicting the spontaneity and direction of redox reactions. 3. Comparing the relative strengths of oxidizing and reducing agents." },
+                { q: "How do standard electrode potentials predict the spontaneity of a reaction?", a: "By calculating the overall cell potential (\\(E°_{cell}\\)). If \\(E°_{cell}\\) is positive, the forward reaction is spontaneous. If it is negative, the reaction is non-spontaneous in the forward direction." },
+                { q: "Write the formula for calculating the EMF of a cell.", a: "\\(E°_{cell} = E°_{cathode(reduction)} - E°_{anode(reduction)}\\)" },
+                { q: "What is electrolysis, and how does it differ from a galvanic cell?", a: "Electrolysis is the process of using external electrical energy to drive a non-spontaneous chemical reaction. It differs from a galvanic cell, which uses a spontaneous chemical reaction to generate electrical energy." },
+                { q: "Compare the electrolysis of molten salts with that of aqueous solutions.", a: "Molten salt electrolysis involves only the ions from the salt itself. Aqueous solution electrolysis is more complex because water molecules can also be oxidized (to \\(O_2\\)) or reduced (to \\(H_2\\)), creating competition at the electrodes." },
+                { q: "List and briefly explain the three main factors determining preferential discharge of ions.", a: "1. <strong>Position in Electrochemical Series:</strong> The ion that is easier to discharge (less negative E° for cation reduction, less positive E° for anion reduction) is preferred. 2. <strong>Concentration:</strong> A highly concentrated ion may be discharged even if it is not the most favored by E° values (e.g., Cl⁻ in brine). 3. <strong>Nature of Electrode:</strong> An active electrode can itself be oxidized at the anode instead of the ions in solution." },
+                { q: "Distinguish between inert and active electrodes, with an example.", a: "Inert electrodes (e.g., platinum, graphite) do not participate in the reaction. Active electrodes (e.g., a copper anode during copper refining) do participate by being oxidized." },
+                { q: "State Faraday's First Law of Electrolysis.", a: "The mass of a substance produced at an electrode during electrolysis is directly proportional to the quantity of electric charge passed through the electrolyte." },
+                { q: "Define the Faraday Constant (F) and state its value and units.", a: "The Faraday constant is the magnitude of electric charge per mole of electrons. Its value is approximately 96,500 Coulombs per mole (C/mol)." },
+                { q: "Describe the reaction of sodium with (a) dry air, (b) moist air, and (c) when heated in air.", a: "(a) In dry air, it tarnishes, forming sodium oxide (\\(Na_2O\\)). (b) In moist air, it forms sodium hydroxide (\\(NaOH\\)), which then reacts with \\(CO_2\\) to form sodium carbonate. (c) When heated, it burns with a yellow flame to form mainly sodium peroxide (\\(Na_2O_2\\))." },
+                { q: "Explain why aluminium does not react with cold water but does react with steam.", a: "Aluminium is protected by a tough, non-porous layer of aluminium oxide (\\(Al_2O_3\\)) that forms instantly in air, preventing reaction with cold water. At the high temperature of steam, this protective barrier can be breached, allowing the aluminium to react and form aluminium oxide and hydrogen gas." },
+                { q: "Compare the reaction of sodium and calcium with cold water.", a: "Sodium reacts very vigorously, darting across the water surface and melting into a ball, producing \\(NaOH\\) and \\(H_2\\). Calcium reacts readily but less vigorously, sinking and steadily producing bubbles of \\(H_2\\) and forming a white suspension of \\(Ca(OH)_2\\)." },
+                { q: "Describe the reaction of zinc and iron with steam.", a: "Neither reacts with cold water. When red hot, both metals react with steam to produce the metal oxide and hydrogen gas. Zinc forms zinc oxide (\\(ZnO\\)), and iron forms tri-iron tetraoxide (\\(Fe_3O_4\\))." },
+                { q: "Why does copper show no reaction with water or steam?", a: "Copper is below hydrogen in the reactivity series, meaning it is not reactive enough to displace hydrogen from water or steam." },
+                { q: "What type of compounds are formed when metals react with chlorine?", a: "They form metal chlorides. The reaction is often vigorous, especially when the metal is heated." },
+                { q: "Describe the reaction between hot iron wool and chlorine gas.", a: "The iron wool glows and reacts to form dark brown solid crystals of iron(III) chloride (\\(FeCl_3\\)). Chlorine is a strong enough oxidizing agent to oxidize iron to its +3 state." },
+                { q: "Explain why aluminium chloride fumes in moist air.", a: "Aluminium chloride has significant covalent character and reacts readily with water vapor in the air (hydrolysis) to produce solid aluminium hydroxide and fumes of hydrogen chloride gas: \\(AlCl_3(s) + 3H_2O(l) \\rightarrow Al(OH)_3(s) + 3HCl(g)\\)." },
+                { q: "What are the general products when a metal like zinc reacts with dilute HCl?", a: "The products are a metal salt (zinc chloride) and hydrogen gas: \\(Zn(s) + 2HCl(aq) \\rightarrow ZnCl_2(aq) + H_2(g)\\)." },
+                { q: "Explain the difference in products between the reaction of sodium with cold water and iron with steam.", a: "Sodium is highly reactive and forms its soluble hydroxide with cold water (\\(NaOH\\)). Iron is less reactive and requires high-temperature steam; at these temperatures, the product is the more stable iron oxide (\\(Fe_3O_4\\)) rather than the hydroxide, which would decompose." },
+                { q: "Explain the concept of passivation with an example.", a: "Passivation is when a reactive metal becomes unreactive due to the formation of a very thin, non-porous protective layer on its surface. For example, aluminium and iron are passivated by concentrated nitric acid, which forms a protective oxide layer." },
+                { q: "Compare the products when copper reacts with dilute versus concentrated nitric acid.", a: "With dilute \\(HNO_3\\), the gaseous product is nitrogen monoxide (NO). With concentrated \\(HNO_3\\), the gaseous product is brown nitrogen dioxide (\\(NO_2\\)). In both cases, copper(II) nitrate and water are also formed." },
+                { q: "What are amphoteric oxides? Name three metals that form them and show the reaction of one with both an acid and a base.", a: "Amphoteric oxides are oxides that react with both acids and strong bases. Aluminium, zinc, and lead form them. Example: Zinc oxide. With acid: \\(ZnO + 2HCl \\rightarrow ZnCl_2 + H_2O\\). With base: \\(ZnO + 2NaOH + H_2O \\rightarrow Na_2[Zn(OH)_4]\\)." },
+                { q: "Explain why copper reacts with hot concentrated sulphuric acid.", a: "Hot concentrated \\(H_2SO_4\\) is a strong oxidizing agent. It oxidizes copper (which is below hydrogen in the reactivity series) to copper(II) sulphate, while the sulphate ions are reduced to sulphur dioxide gas: \\(Cu + 2H_2SO_4 \\rightarrow CuSO_4 + SO_2 + 2H_2O\\)." },
+                { q: "Define an alloy and state its primary purpose.", a: "An alloy is a metallic substance made by mixing two or more elements (at least one being a metal). Its purpose is to create a new material with enhanced properties, such as greater strength, hardness, or corrosion resistance, compared to the pure base metal." },
+                { q: "Explain the mechanism by which alloying generally increases hardness.", a: "The atoms of the different alloying elements have different sizes. This disrupts the regular, orderly arrangement of atoms in the pure metal's crystal lattice, making it more difficult for layers of atoms to slide over one another, thus increasing hardness and strength." },
+                { q: "Name two common uses for cast iron.", a: "Cast iron is very hard and brittle, making it suitable for engine blocks and drainage pipes." },
+                { q: "What is stainless steel composed of, and what is its key property?", a: "It is an alloy of iron, chromium (~18%), and nickel (~8%). Its key property is excellent corrosion resistance, which is due to a thin, passive layer of chromium oxide on its surface." },
+                { q: "Name an important aluminium alloy, its composition, and its primary use.", a: "Duralumin. Composition: Aluminium (~94%), Copper (~4%), with small amounts of Mg and Mn. Use: Its high strength-to-weight ratio makes it ideal for aircraft frames." },
+                { q: "List three significant environmental impacts of metal extraction.", a: "1. Air Pollution from smelting (e.g., \\(SO_2\\) causing acid rain, \\(CO_2\\) contributing to climate change). 2. Water Pollution from mining waste and acid mine drainage. 3. Land Degradation from mining operations and waste (tailings, slag) disposal." },
+                { q: "How does roasting sulphide ores contribute to air pollution, and how is this mitigated?", a: "Roasting releases large amounts of sulphur dioxide (\\(SO_2\\)), a gas that causes acid rain. This is mitigated in modern smelters by capturing the \\(SO_2\\) gas and using it as a raw material to manufacture sulphuric acid." },
+                { q: "What is acid mine drainage (AMD)?", a: "AMD is a severe environmental problem where sulphide minerals (like pyrite, \\(FeS_2\\)) in mine waste rock are exposed to air and water. They oxidize to form sulphuric acid, which then leaches toxic heavy metals from the rocks, contaminating water sources." },
+                { q: "Give two reasons why recycling metals is environmentally important.", a: "1. <strong>Energy Conservation:</strong> Recycling uses significantly less energy than extracting metals from virgin ores (e.g., recycling aluminium saves ~95% of the energy). 2. <strong>Resource Conservation:</strong> It conserves finite ore resources and reduces the need for new mining, thereby lessening land degradation and pollution." },
+                { q: "Explain the principle of galvanizing for corrosion prevention, including sacrificial protection.", a: "Galvanizing is the process of coating iron or steel with a layer of zinc. Zinc provides a physical barrier, but more importantly, it provides sacrificial protection. Since zinc is more reactive than iron, if the coating is scratched, the zinc will corrode preferentially (acting as a sacrificial anode), protecting the iron from rusting." }
+            ];
+
+            // --- DOM Elements ---
+            const contentWrapper = document.getElementById('content-wrapper').querySelector('.max-w-4xl');
+            const mainNav = document.getElementById('main-nav').querySelector('ul');
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const sideMenu = document.getElementById('side-menu');
+            const menuOverlay = document.getElementById('menu-overlay');
+
+            let currentSlide = 0;
+
+            // --- Functions ---
+
+            function initialize() {
+                slidesData.forEach((slide, index) => {
+                    const slideElement = document.createElement('section');
+                    slideElement.id = `slide-${index}`;
+                    slideElement.className = 'slide bg-white p-6 md:p-8 rounded-lg shadow-lg';
+                    slideElement.style.display = 'none';
+                    
+                    const titleElement = document.createElement('h2');
+                    titleElement.className = 'mb-6 text-3xl font-bold text-gray-800 border-b pb-3';
+                    titleElement.innerHTML = slide.title;
+                    
+                    const contentElement = document.createElement('div');
+                    contentElement.className = 'prose max-w-none text-gray-700 leading-relaxed';
+                    contentElement.innerHTML = slide.content;
+
+                    slideElement.appendChild(titleElement);
+                    slideElement.appendChild(contentElement);
+                    contentWrapper.appendChild(slideElement);
+
+                    if (slide.title === "Revision Questions") {
+                        const questionsContainer = slideElement.querySelector('.space-y-4');
+                        revisionQuestions.forEach((item, qIndex) => {
+                            const detail = document.createElement('details');
+                            const summary = document.createElement('summary');
+                            summary.innerHTML = `<div class="flex-grow">${qIndex + 1}. ${item.q}</div>`;
+                            
+                            const answerDiv = document.createElement('div');
+                            answerDiv.className = 'answer-content';
+                            answerDiv.innerHTML = `<p>${item.a}</p>`;
+
+                            detail.appendChild(summary);
+                            detail.appendChild(answerDiv);
+                            questionsContainer.appendChild(detail);
+                        });
+                    }
+                });
+
+                slidesData.forEach((slide, index) => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = slide.title;
+                    a.dataset.index = index;
+                    a.className = 'side-nav-link block p-3 rounded-md transition-colors duration-200 hover:bg-gray-700';
+                    li.appendChild(a);
+                    mainNav.appendChild(li);
+                });
+
+                showSlide(0, true);
+                setupEventListeners();
+            }
+
+            function renderMath(element) {
+                if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                    window.MathJax.startup.promise.then(() => {
+                        window.MathJax.typesetPromise(element ? [element] : []);
+                    }).catch((err) => console.error('MathJax typeset failed: ', err));
+                }
+            }
+
+            function showSlide(index, isInitialLoad = false) {
+                if (index < 0 || index >= slidesData.length) return;
+                currentSlide = index;
+                
+                document.querySelectorAll('.slide').forEach(slide => {
+                    slide.style.display = 'none';
+                });
+                
+                const slideToShow = document.getElementById(`slide-${index}`);
+                slideToShow.style.display = 'block';
+                document.getElementById('content-wrapper').scrollTop = 0;
+                
+                renderMath(slideToShow);
+                updateUI();
+            }
+            
+            function updateUI() {
+                updateNavButtons();
+                updateActiveLink();
+                updateBreadcrumbs();
+            }
+
+            function updateNavButtons() {
+                prevBtn.disabled = currentSlide === 0;
+                nextBtn.disabled = currentSlide === slidesData.length - 1;
+            }
+
+            function updateActiveLink() {
+                document.querySelectorAll('.side-nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (parseInt(link.dataset.index) === currentSlide) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            function updateBreadcrumbs() {
+                breadcrumbs.innerHTML = `Home / <span class="text-gray-900">${slidesData[currentSlide].title}</span>`;
+            }
+            
+            function toggleMenu() {
+                sideMenu.classList.toggle('-translate-x-full');
+                menuOverlay.classList.toggle('hidden');
+            }
+
+            function setupEventListeners() {
+                nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+                prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+                
+                mainNav.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (link && link.dataset.index) {
+                        e.preventDefault();
+                        const index = parseInt(link.dataset.index);
+                        showSlide(index);
+                        if (window.innerWidth < 768) {
+                           toggleMenu();
+                        }
+                    }
+                });
+
+                hamburgerBtn.addEventListener('click', toggleMenu);
+                menuOverlay.addEventListener('click', toggleMenu);
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>
