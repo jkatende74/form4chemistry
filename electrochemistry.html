@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrochemistry: An Interactive Guide</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathJax Configuration and CDN -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Internal CSS for Layout Control and Styling -->
+    <style>
+        /* Prevents the main browser window from scrolling */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a8a8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Style for the active link in the side navigation */
+        .side-nav-link.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 4px solid #ffffff;
+        }
+
+        /* Custom styles for details/summary to create accordion-like elements */
+        details > summary {
+            list-style: none; /* Remove default marker */
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background-color: #f3f4f6; /* gray-100 */
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: start; /* Align to top to fix layout with LaTeX */
+            transition: background-color 0.2s;
+        }
+
+        details > summary:hover {
+             background-color: #e5e7eb; /* gray-200 */
+        }
+
+        details > summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 300;
+            transition: transform 0.3s ease-in-out;
+            margin-left: 1rem; /* Space between text and icon */
+            flex-shrink: 0;
+        }
+        
+        details[open] > summary::after {
+            transform: rotate(45deg);
+        }
+
+        details .answer-content {
+            padding: 1rem;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            margin-top: -0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen overflow-hidden bg-gray-100">
+        <!-- Side Navigation Menu -->
+        <aside id="side-menu" class="fixed top-0 left-0 z-40 w-64 h-full bg-gray-800 text-white transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0">
+            <div class="p-5 border-b border-gray-700">
+                <h1 class="text-2xl font-bold">Electrochemistry</h1>
+                <p class="text-sm text-gray-400">Chemistry Guide</p>
+            </div>
+            <nav id="main-nav" class="p-4 overflow-y-auto h-[calc(100%-80px)]">
+                <ul class="space-y-1">
+                    <!-- Navigation links will be dynamically populated and handled by JS -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Overlay for mobile view when side menu is open -->
+        <div id="menu-overlay" class="fixed inset-0 z-30 hidden bg-black bg-opacity-50 md:hidden"></div>
+
+        <!-- Main Content Area -->
+        <div class="flex flex-col flex-1 w-full h-full overflow-hidden">
+            <!-- Header: Hamburger Menu and Breadcrumbs -->
+            <header class="flex items-center justify-between flex-shrink-0 p-4 bg-white border-b border-gray-200">
+                <button id="hamburger-btn" class="p-2 text-gray-600 rounded-md md:hidden" aria-label="Open Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <nav id="breadcrumbs" class="text-sm text-gray-500 font-medium">
+                    <!-- Breadcrumbs will be dynamically populated by JS -->
+                </nav>
+            </header>
+
+            <!-- Content Slides Wrapper -->
+            <main id="content-wrapper" class="flex-1 p-4 overflow-y-auto md:p-6 lg:p-8">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <!-- Slides will be injected here from the slidesData object -->
+                </div>
+            </main>
+            
+            <!-- Navigation Buttons Footer -->
+            <footer class="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+                <div class="flex justify-between max-w-4xl mx-auto">
+                    <button id="prev-btn" class="px-6 py-2 font-semibold text-white bg-gray-500 rounded-lg shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <button id="next-btn" class="px-6 py-2 font-semibold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            const slidesData = [
+                {
+                    title: "Introduction to Electrochemistry",
+                    content: `
+                        <p class="text-lg mb-4">Electrochemistry is a fundamental branch of chemistry that explores the relationship between electrical energy and chemical reactions. At its core are <strong>oxidation-reduction (redox) reactions</strong>, which involve the transfer of electrons.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Oxidation and Reduction</h3>
+                        <p class="mb-4">A redox reaction consists of two simultaneous processes:</p>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700">
+                            <li><strong>Oxidation:</strong> The loss of electrons by a chemical species, resulting in an increase in its oxidation state. The species that loses electrons is the <strong>reducing agent</strong>.</li>
+                            <li><strong>Reduction:</strong> The gain of electrons by a chemical species, leading to a decrease in its oxidation state. The species that gains electrons is the <strong>oxidizing agent</strong>.</li>
+                        </ul>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border">
+                            <h4 class="font-semibold text-gray-800">Mnemonic: OIL RIG</h4>
+                            <p><strong>O</strong>xidation <strong>I</strong>s <strong>L</strong>oss (of electrons), <strong>R</strong>eduction <strong>I</strong>s <strong>G</strong>ain (of electrons).</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Conductors & Electrolytes",
+                    content: `
+                        <p class="mb-4">The study of electrochemistry begins with understanding how substances conduct electricity.</p>
+                        <ul class="pl-5 space-y-3 list-disc text-gray-700">
+                            <li><strong>Conductors:</strong> Materials that allow electric current to flow.
+                                <ul class="list-['-_'] pl-5 mt-2 space-y-1">
+                                    <li><strong>Metallic Conductors:</strong> Conduct via moving electrons (e.g., copper, graphite). The material is not chemically changed.</li>
+                                    <li><strong>Electrolytes:</strong> Conduct when molten or dissolved in water via moving ions (e.g., acids, bases, salts). The material is chemically decomposed.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Non-Conductors (Insulators):</strong> Materials that do not allow electric current to flow (e.g., rubber, plastic).</li>
+                            <li><strong>Non-electrolytes:</strong> Compounds that do not form ions and do not conduct electricity in molten or aqueous states (e.g., sugar, paraffin).</li>
+                        </ul>
+                    `
+                },
+                {
+                    title: "Electrolytic Cells",
+                    content: `
+                        <p class="text-lg mb-4"><strong>Electrolysis</strong> is the chemical decomposition of an electrolyte by passing a direct electric current through it. This process occurs in an electrolytic cell.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Components of an Electrolytic Cell</h3>
+                        <div class="text-center bg-gray-100 p-6 rounded-lg my-4">
+                            <p class="font-semibold">[Diagram: An Electrolytic Cell]</p>
+                            <p class="text-sm text-gray-600 mt-2">A typical diagram shows a power source, two electrodes (anode and cathode) immersed in an electrolyte, and the direction of ion and electron flow.</p>
+                        </div>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700">
+                            <li><strong>Power Source:</strong> Provides direct current (DC).</li>
+                            <li><strong>Anode:</strong> The electrode connected to the <strong>positive (+)</strong> terminal. Oxidation occurs here.</li>
+                            <li><strong>Cathode:</strong> The electrode connected to the <strong>negative (-)</strong> terminal. Reduction occurs here.</li>
+                            <li><strong>Electrolyte:</strong> The molten or aqueous substance containing mobile ions.</li>
+                        </ul>
+                        <p class="mt-4">During electrolysis, positive ions (cations) move to the cathode, and negative ions (anions) move to the anode, where they are discharged.</p>
+                    `
+                },
+                 {
+                    title: "Electrolysis of Aqueous Solutions",
+                    content: `
+                        <p class="mb-4">The electrolysis of aqueous solutions is more complex than molten salts because water itself can be oxidized or reduced, creating competition at the electrodes.</p>
+                        <p class="mb-4">The ions present are from both the solute and the autoionization of water (\\(\\ce{H+}\\) and \\(\\ce{OH-}\\)).</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Factors Affecting Preferential Discharge</h3>
+                        <ol class="list-decimal pl-5 space-y-3 text-gray-700">
+                            <li><strong>Position in the Electrochemical Series:</strong> At the cathode, the cation that is more easily reduced (has a less negative/more positive E°) is discharged. At the anode, the anion that is more easily oxidized is discharged.</li>
+                            <li><strong>Concentration of Ions:</strong> If an ion is in high concentration, it may be discharged preferentially, even if its position in the series is less favorable. This is significant for halide ions (e.g., in concentrated brine).</li>
+                            <li><strong>Nature of the Electrode:</strong>
+                                <ul class="list-['-_'] pl-5 mt-1">
+                                    <li><strong>Inert Electrodes</strong> (graphite, platinum) act only as surfaces for electron transfer.</li>
+                                    <li><strong>Active Electrodes</strong> (e.g., copper) can participate in the reaction by being oxidized at the anode.</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    `
+                },
+                {
+                    title: "Galvanic (Voltaic) Cells",
+                    content: `
+                        <p class="text-lg mb-4">In contrast to electrolytic cells, <strong>galvanic cells</strong> (or voltaic cells) are devices that generate electrical energy from <strong>spontaneous</strong> redox reactions. They are the basis for batteries.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Components of a Galvanic Cell</h3>
+                        <div class="text-center bg-gray-100 p-6 rounded-lg my-4">
+                            <p class="font-semibold">[Diagram: A Galvanic Cell (e.g., Daniell Cell)]</p>
+                            <p class="text-sm text-gray-600 mt-2">A diagram showing two half-cells connected by a salt bridge and an external wire with a voltmeter.</p>
+                        </div>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700">
+                            <li><strong>Anode:</strong> The electrode where oxidation occurs. It is the <strong>negative (-)</strong> terminal.</li>
+                            <li><strong>Cathode:</strong> The electrode where reduction occurs. It is the <strong>positive (+)</strong> terminal.</li>
+                            <li><strong>Salt Bridge:</strong> A tube containing an inert electrolyte (e.g., \\(\\ce{KNO3}\\)) that connects the two half-cells, completing the circuit and maintaining charge neutrality.</li>
+                        </ul>
+                        <p class="mt-4">Electrons flow from the anode to the cathode through the external wire. A positive cell potential (E°cell) indicates a spontaneous reaction.</p>
+                    `
+                },
+                {
+                    title: "Faraday's Laws of Electrolysis",
+                    content: `
+                        <p class="mb-4">Michael Faraday formulated two laws that describe the quantitative relationship between the amount of electricity passed and the amount of substance produced during electrolysis.</p>
+                        <div class="space-y-4">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">Faraday's First Law</h4>
+                                <p>The mass of a substance liberated or deposited at an electrode is directly proportional to the quantity of electricity (charge) passed through the electrolyte. (\\(m \\propto Q\\))</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">Faraday's Second Law</h4>
+                                <p>When the same quantity of electricity is passed through different electrolytes, the masses of the substances liberated are proportional to their chemical equivalent weights.</p>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">The Faraday Constant (F)</h3>
+                        <p>One Faraday (F) is the charge carried by one mole of electrons.</p>
+                        <p class="font-mono text-center my-2 p-2 bg-gray-100 rounded">F ≈ 96,500 Coulombs per mole (C/mol)</p>
+                        <p>The key equation for calculations is: <strong>Charge (Q) = Moles of electrons (nₑ) × F</strong></p>
+                    `
+                },
+                {
+                    title: "Applications of Electrochemistry",
+                    content: `
+                        <p class="mb-6">Electrochemical principles are fundamental to numerous practical applications in technology and industry.</p>
+                        <div class="space-y-4">
+                            <p><strong>1. Batteries:</strong> Galvanic cells that convert chemical energy to electrical energy.
+                                <ul class="list-['-_'] pl-5 mt-1">
+                                    <li><strong>Primary Cells (Non-rechargeable):</strong> e.g., the Leclanché (dry) cell.</li>
+                                    <li><strong>Secondary Cells (Rechargeable):</strong> e.g., the lead-acid accumulator used in cars.</li>
+                                </ul>
+                            </p>
+                            <p><strong>2. Fuel Cells:</strong> Continuously produce electricity from a fuel (e.g., hydrogen-oxygen fuel cell), offering high efficiency and low pollution.</p>
+                            <p><strong>3. Extraction of Reactive Metals:</strong> Electrolysis is the primary method for extracting reactive metals like sodium, magnesium, and aluminum from their molten ores.</p>
+                            <p><strong>4. Metal Purification (Refining):</strong> Used to obtain high-purity metals. For example, in copper refining, an impure copper anode dissolves and pure copper deposits onto the cathode.</p>
+                             <p><strong>5. Electroplating:</strong> Coating an object with a thin layer of another metal for corrosion protection (galvanizing) or decoration (silver/chrome plating).</p>
+                             <p><strong>6. Corrosion and Prevention:</strong> Corrosion (like rusting) is an electrochemical process. Prevention methods like galvanizing and sacrificial protection use electrochemical principles to protect metals.</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Key Experiments",
+                    content: `
+                        <p class="mb-6">This section summarizes key experiments that demonstrate fundamental electrochemical principles.</p>
+                        <div class="space-y-6">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">1. Electrolysis of Molten Lead(II) Bromide</h4>
+                                <p><strong>Objective:</strong> To demonstrate the decomposition of a molten binary salt.</p>
+                                <p><strong>Setup:</strong> Molten lead(II) bromide (\\(\\ce{PbBr2}\\)) in a crucible with two inert graphite electrodes connected to a DC power source.</p>
+                                <p><strong>Observations:</strong></p>
+                                <ul class="list-disc pl-5 text-sm space-y-1">
+                                    <li>At the cathode (-), a silvery bead of molten lead metal forms. (\\(\\ce{Pb^{2+} + 2e- -> Pb}\\))</li>
+                                    <li>At the anode (+), a reddish-brown gas (bromine) is evolved. (\\(\\ce{2Br- -> Br2 + 2e-}\\))</li>
+                                </ul>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">2. Electrolysis of Aqueous CuSO₄</h4>
+                                <p><strong>Objective:</strong> To compare the effect of inert vs. active electrodes.</p>
+                                <p><strong>With Inert (Graphite) Electrodes:</strong> Copper deposits at the cathode, oxygen gas evolves at the anode, and the blue solution fades.</p>
+                                <p><strong>With Active (Copper) Electrodes:</strong> Copper deposits at the cathode, but the copper anode dissolves at the same rate. The blue color of the solution remains unchanged. This is the principle behind copper refining.</p>
+                            </div>
+                             <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">3. Constructing a Simple Galvanic Cell</h4>
+                                <p><strong>Objective:</strong> To show the generation of electricity from a spontaneous redox reaction.</p>
+                                <p><strong>Setup:</strong> A zinc electrode in a zinc sulphate solution and a copper electrode in a copper(II) sulphate solution, connected by a salt bridge. A voltmeter connects the two electrodes.</p>
+                                <p><strong>Observation:</strong> The voltmeter shows a positive reading, indicating a potential difference and flow of current. Zinc (more reactive) acts as the anode, and copper acts as the cathode.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Worked Examples",
+                    content: `
+                        <p class="mb-6">Apply your knowledge by working through these calculation-based examples.</p>
+                        <div class="space-y-4">
+                            <details>
+                                <summary>Example 1: Mass Deposited in Electrolysis</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">Calculate the mass of copper deposited when a current of 1.0 A flows for 30 minutes through a copper(II) sulphate solution. (Cu = 63.5, F = 96,500 C/mol).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Calculate total charge (Q):</strong><br>\\(Q = I \\times t = 1.0 A \\times (30 \\times 60 s) = 1800 C\\)</li>
+                                        <li><strong>Write the half-reaction:</strong><br>\\(\\ce{Cu^{2+}(aq) + 2e- -> Cu(s)}\\). This shows 2 moles of electrons are needed for 1 mole of Cu.</li>
+                                        <li><strong>Find the charge for 1 mole of Cu:</strong><br>Charge = \\(2 \\times F = 2 \\times 96500 C = 193000 C\\).</li>
+                                        <li><strong>Calculate mass deposited:</strong><br>If 193,000 C deposits 63.5 g of Cu,<br>Then 1800 C will deposit: \\( \\frac{1800 C}{193000 C} \\times 63.5 g = 0.59 g\\).</li>
+                                    </ol>
+                                </div>
+                            </details>
+                            <details>
+                                <summary>Example 2: Volume of Gas Liberated</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">What volume of oxygen gas (at r.t.p.) is liberated at the anode when a current of 3 A is passed through dilute magnesium sulphate solution for 45 minutes 30 seconds? (Molar gas volume at r.t.p. = 24 L, F = 96,500 C/mol).</p>
+                                     <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Calculate total charge (Q):</strong><br>Time = (45 × 60) + 30 = 2730 s.<br>\\(Q = I \\times t = 3 A \\times 2730 s = 8190 C\\).</li>
+                                        <li><strong>Write the half-reaction:</strong><br>\\(\\ce{4OH-(aq) -> 2H2O(l) + O2(g) + 4e-}\\). This shows 4 moles of electrons produce 1 mole of \\(O_2\\).</li>
+                                        <li><strong>Find charge for 1 mole of \\(O_2\\):</strong><br>Charge = \\(4 \\times F = 4 \\times 96500 C = 386000 C\\).</li>
+                                        <li><strong>Calculate volume liberated:</strong><br>If 386,000 C liberates 24 L of \\(O_2\\),<br>Then 8190 C will liberate: \\(\\frac{8190 C}{386000 C} \\times 24 L = 0.509 L\\) or 509 cm³.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                            <details>
+                                <summary>Example 3: Calculating Ion Charge</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">In an experiment, a current of 0.2 A was passed for 1930 seconds through a \\(\\ce{CuSO4}\\) solution. The mass of the copper cathode increased by 0.128 g. Calculate the charge on a copper ion. (Cu = 64, F = 96,500 C/mol).</p>
+                                     <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Calculate total charge passed (Q):</strong><br>\\(Q = I \\times t = 0.2 A \\times 1930 s = 386 C\\).</li>
+                                        <li><strong>Calculate moles of copper deposited:</strong><br>Moles of Cu = Mass / Molar mass = 0.128 g / 64 g/mol = 0.002 mol.</li>
+                                        <li><strong>Calculate moles of electrons passed:</strong><br>Moles of e⁻ (nₑ) = Q / F = 386 C / 96500 C/mol = 0.004 mol.</li>
+                                        <li><strong>Find the ratio of electrons to copper ions:</strong><br>Ratio = Moles of e⁻ / Moles of Cu = 0.004 mol / 0.002 mol = 2.</li>
+                                        <li><strong>Determine the ion charge:</strong><br>Since 2 moles of electrons are required to deposit 1 mole of copper, the charge on the copper ion is <strong>+2</strong>.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                        </div>
+                    `
+                },
+                {
+                    title: "Revision Questions",
+                    content: `
+                        <p class="mb-6">Test your understanding of the chapter with these 70 revision questions. Click on a question to reveal the answer.</p>
+                        <div class="space-y-4">
+                            <!-- Questions will be generated here by JS -->
+                        </div>
+                    `
+                }
+            ];
+
+            const revisionQuestions = [
+                { q: "Define electrochemistry.", a: "Electrochemistry is a branch of chemistry that investigates the relationship between electrical energy and chemical reactions." },
+                { q: "What are redox reactions, and why are they fundamental to electrochemistry?", a: "Redox reactions involve the transfer of electrons, altering oxidation states. They are fundamental because this electron flow can be used to generate electricity (galvanic cells) or be driven by electricity (electrolytic cells)." },
+                { q: "Distinguish between oxidation and reduction in terms of electron transfer.", a: "Oxidation is the loss of electrons. Reduction is the gain of electrons." },
+                { q: "Using the mnemonic 'OIL RIG,' explain what happens during oxidation and reduction.", a: "Oxidation Is Loss (of electrons), Reduction Is Gain (of electrons)." },
+                { q: "What is a reducing agent, also known as a reductant?", a: "A reducing agent is the species that loses electrons (it gets oxidized)." },
+                { q: "What is an oxidizing agent, also known as an oxidant?", a: "An oxidizing agent is the species that gains electrons (it gets reduced)." },
+                { q: "In the reaction \\(\\ce{Fe(s) + Cu^{2+}(aq) -> Fe^{2+}(aq) + Cu(s)}\\), identify the species that is oxidized and the species that is reduced.", a: "Fe(s) is oxidized. \\(\\ce{Cu^{2+}(aq)}\\) is reduced." },
+                { q: "Write the oxidation half-reaction for iron in the reaction \\(\\ce{Fe(s) + Cu^{2+}(aq) -> Fe^{2+}(aq) + Cu(s)}\\).", a: "\\(\\ce{Fe(s) -> Fe^{2+}(aq) + 2e-}\\)" },
+                { q: "Write the reduction half-reaction for copper(II) ions in the reaction \\(\\ce{Fe(s) + Cu^{2+}(aq) -> Fe^{2+}(aq) + Cu(s)}\\).", a: "\\(\\ce{Cu^{2+}(aq) + 2e- -> Cu(s)}\\)" },
+                { q: "Define oxidation state (or oxidation number).", a: "It represents the hypothetical charge an atom would have if all its bonds to different elements were 100% ionic." },
+                { q: "State the rule for assigning the oxidation state of a free element.", a: "The oxidation state of a free element is 0." },
+                { q: "What is the oxidation state for a monoatomic ion?", a: "The oxidation state equals the charge on the ion." },
+                { q: "Determine the oxidation number of sulfur (S) in \\(\\ce{SO3^{2-}}\\).", a: "Let S be x. x + 3(-2) = -2. So, x = +4." },
+                { q: "Determine the oxidation number of chromium (Cr) in \\(\\ce{Cr2O7^{2-}}\\).", a: "Let Cr be x. 2x + 7(-2) = -2. So, 2x = 12, x = +6." },
+                { q: "Determine the oxidation number of nitrogen (N) in \\(\\ce{NH3}\\).", a: "Let N be x. x + 3(+1) = 0. So, x = -3." },
+                { q: "Explain how tracking changes in oxidation numbers helps in identifying oxidation and reduction processes.", a: "An increase in oxidation number indicates oxidation (loss of electrons). A decrease in oxidation number indicates reduction (gain of electrons)." },
+                { q: "What is an electrochemical cell?", a: "A device that converts chemical energy into electrical energy or vice versa, typically consisting of two electrodes and an electrolyte." },
+                { q: "Name the two main types of electrochemical cells.", a: "Galvanic (voltaic) cells and electrolytic cells." },
+                { q: "What type of redox reaction occurs in a galvanic (voltaic) cell?", a: "A spontaneous redox reaction." },
+                { q: "In a galvanic cell, which electrode is the anode and which is the cathode, and what are their respective polarities?", a: "The anode is where oxidation occurs and is the negative terminal. The cathode is where reduction occurs and is the positive terminal." },
+                { q: "Describe the direction of electron flow in the external circuit of a galvanic cell.", a: "From the anode (negative terminal) to the cathode (positive terminal)." },
+                { q: "What is the primary function of a salt bridge in an electrochemical cell?", a: "To complete the electrical circuit and maintain electrical neutrality in the half-cells by allowing ion flow." },
+                { q: "Name two common inert electrolyte solutions used in a salt bridge.", a: "Potassium nitrate (\\(\\ce{KNO3}\\)) or potassium chloride (\\(\\ce{KCl}\\))." },
+                { q: "Explain how a salt bridge maintains electrical neutrality.", a: "It allows ions to flow between the half-cells to balance the charge build-up that occurs as electrons move, preventing the reaction from stopping." },
+                { q: "In cell notation, where is the anode (oxidation half-cell) typically written?", a: "On the left." },
+                { q: "In cell notation, what do a single vertical line (|) and a double vertical line (||) represent?", a: "A single line (|) represents a phase boundary. A double line (||) represents the salt bridge." },
+                { q: "Write the cell notation for the Daniell cell.", a: "\\(\\ce{Zn(s)|Zn^{2+}(aq)||Cu^{2+}(aq)|Cu(s)}\\)" },
+                { q: "Define electrode potential.", a: "The potential difference that develops at a metal-solution interface when the metal is in contact with a solution of its ions." },
+                { q: "List the standard conditions for measuring standard electrode potential (E°).", a: "25°C (298K), 1 M concentration for solutions, and 1 atm pressure for gases." },
+                { q: "What is the Standard Hydrogen Electrode (SHE), and what is its assigned potential?", a: "It is the universal primary reference electrode, assigned a standard electrode potential of 0.00 volts." },
+                { q: "State two functions of the platinum electrode in the SHE.", a: "It is inert and provides a surface for the redox reaction to occur." },
+                { q: "How does a more positive E° value indicate the strength of an oxidizing agent?", a: "A more positive E° value indicates a greater tendency for the species to be reduced, making it a stronger oxidizing agent." },
+                { q: "How does a more negative E° value indicate the strength of a reducing agent?", a: "A more negative E° value indicates a greater tendency for the species' reduced form to be oxidized, making it a stronger reducing agent." },
+                { q: "Provide the general formula for calculating E°cell.", a: "\\(E°_{cell} = E°_{cathode(reduction)} - E°_{anode(reduction)}\\)" },
+                { q: "How does the sign of E°cell predict reaction spontaneity?", a: "A positive E°cell indicates a spontaneous reaction. A negative E°cell indicates a non-spontaneous reaction." },
+                { q: "What is the main purpose of an electrolytic cell?", a: "To use external electrical energy to drive non-spontaneous chemical reactions." },
+                { q: "How do the polarities of the anode and cathode differ between electrolytic and galvanic cells?", a: "In an electrolytic cell, the anode is positive and the cathode is negative. This is the reverse of a galvanic cell." },
+                { q: "Describe the electrolysis of molten lead(II) bromide (\\(\\ce{PbBr2}\\)).", a: "At the cathode (-), \\(\\ce{Pb^{2+}(l) + 2e- -> Pb(l)}\\). At the anode (+), \\(\\ce{2Br-(l) -> Br2(g) + 2e-}\\)." },
+                { q: "Why is electrolysis of aqueous solutions more complex than molten compounds?", a: "Because water itself can be oxidized or reduced, creating competition for discharge at the electrodes." },
+                { q: "List the three primary factors influencing preferential discharge of ions.", a: "1. Position in the electrochemical series. 2. Concentration of ions. 3. Nature of the electrode." },
+                { q: "How does the electrochemical series affect discharge at the cathode?", a: "The cation that is more easily reduced (has a less negative E°) will be discharged." },
+                { q: "Explain the effect of concentration on discharge using the NaCl example.", a: "In concentrated NaCl, Cl⁻ is discharged over OH⁻ due to its high concentration. In dilute NaCl, OH⁻ is discharged preferentially." },
+                { q: "Differentiate between inert and active electrodes, with an example of each.", a: "Inert electrodes (e.g., graphite, platinum) do not react. Active electrodes (e.g., copper) can be oxidized at the anode." },
+                { q: "What are the products of electrolyzing dilute aqueous NaCl?", a: "Cathode: Hydrogen gas. Anode: Oxygen gas." },
+                { q: "What are the products of electrolyzing concentrated brine?", a: "Cathode: Hydrogen gas. Anode: Chlorine gas." },
+                { q: "What are the observations when electrolyzing aqueous \\(\\ce{CuSO4}\\) with inert electrodes?", a: "A brown coating of copper deposits on the cathode, oxygen gas evolves at the anode, and the blue color of the solution fades." },
+                { q: "What happens when electrolyzing aqueous \\(\\ce{CuSO4}\\) with active copper electrodes?", a: "Copper deposits on the cathode, but the copper anode dissolves to replenish the \\(\\ce{Cu^{2+}}\\) ions, so the solution's color remains unchanged." },
+                { q: "State Faraday's First Law of Electrolysis.", a: "The mass of a substance liberated at an electrode is directly proportional to the quantity of electricity passed." },
+                { q: "State Faraday's Second Law of Electrolysis.", a: "When the same quantity of electricity is passed through different electrolytes, the masses of substances liberated are proportional to their chemical equivalent weights." },
+                { q: "Define the Faraday Constant (F) and state its value.", a: "The charge carried by one mole of electrons, approximately 96,500 Coulombs per mole (C/mol)." },
+                { q: "Write the mathematical relationship connecting Q, nₑ, and F.", a: "\\(Q = n_e \\times F\\)" },
+                { q: "How many moles of electrons are needed to deposit one mole of copper from a \\(\\ce{Cu^{2+}}\\) solution?", a: "Two moles of electrons." },
+                { q: "What is the fundamental principle of batteries?", a: "They are galvanic cells that convert stored chemical energy into electrical energy through spontaneous redox reactions." },
+                { q: "Differentiate between a primary and a secondary cell.", a: "Primary cells are non-rechargeable. Secondary cells are rechargeable." },
+                { q: "Name a primary cell and the role of \\(\\ce{MnO2}\\) in it.", a: "The Leclanché (dry) cell. \\(\\ce{MnO2}\\) acts as a depolarizer, oxidizing hydrogen produced at the cathode." },
+                { q: "Name a secondary cell and how its charge is assessed.", a: "The lead-acid accumulator. Its charge is assessed by measuring the density of the sulfuric acid electrolyte." },
+                { q: "What is a fuel cell?", a: "An electrochemical cell that continuously converts the chemical energy of a fuel directly into electricity." },
+                { q: "State one major advantage and one disadvantage of hydrogen-oxygen fuel cells.", a: "Advantage: High efficiency, produces only water. Disadvantage: High cost of materials (platinum), challenges in H₂ production and storage." },
+                { q: "Name two reactive metals extracted by electrolysis.", a: "Sodium and Aluminium." },
+                { q: "Why do carbon anodes need regular replacement during aluminum extraction?", a: "The oxygen produced at the anode reacts with the hot carbon, burning it away as \\(\\ce{CO2}\\)." },
+                { q: "Describe the principle of copper refining.", a: "An impure copper anode dissolves into a \\(\\ce{CuSO4}\\) electrolyte, and pure copper deposits onto the cathode." },
+                { q: "Name two chemicals made by electrolyzing brine.", a: "Sodium hydroxide (NaOH) and Chlorine (Cl₂)." },
+                { q: "What is electroplating and state two purposes?", a: "It is the process of coating an object with a metal using electrolysis. Purposes include corrosion protection and decoration." },
+                { q: "How does galvanizing protect steel?", a: "The zinc coating is more reactive than iron, so it corrodes preferentially, acting as a sacrificial anode." },
+                { q: "Describe sacrificial protection.", a: "Connecting a metal to a more reactive metal, which corrodes instead of the protected metal." },
+                { q: "In \\(\\ce{Fe(s) + Cu^{2+}(aq) -> Fe^{2+}(aq) + Cu(s)}\\), what is the oxidizing agent?", a: "\\(\\ce{Cu^{2+}(aq)}\\) is the oxidizing agent." },
+                { q: "Will a reaction occur between \\(I_2\\) and \\(Cl^-\\) ions given E°(\\(\\ce{I2/I-}\\))=+0.54V and E°(\\(\\ce{Cl2/Cl-}\\))=+1.36V?", a: "No. The calculated E°cell would be +0.54V - (+1.36V) = -0.82V. Since E°cell is negative, the reaction is non-spontaneous." },
+                { q: "Calculate the mass of copper deposited by 1A for 30 mins in \\(\\ce{CuSO4}\\). (Cu=63.5, F=96500 C/mol)", a: "Q = 1A × 1800s = 1800C. 2F (193000C) deposits 63.5g. So, mass = (1800/193000) × 63.5g = 0.59g." },
+                { q: "What volume of \\(O_2\\) (r.t.p) is liberated by 3A for 45.5 mins in \\(\\ce{MgSO4}\\)? (V_m=24L, F=96500 C/mol)", a: "Q = 3A × 2730s = 8190C. 4F (386000C) liberates 1 mole (24L) of \\(O_2\\). So, vol = (8190/386000) × 24L = 0.509L." },
+                { q: "0.2A for 1930s deposits 0.128g of Cu. Calculate the charge on a copper ion. (Cu=64, F=96500 C/mol)", a: "Q = 0.2A × 1930s = 386C. Moles of Cu = 0.128g / 64g/mol = 0.002 mol. Moles of e- = Q/F = 386/96500 = 0.004 mol. Ratio of e- to Cu = 0.004/0.002 = 2. So, the charge is +2." }
+            ];
+
+            // --- DOM Elements ---
+            const contentWrapper = document.getElementById('content-wrapper').querySelector('.max-w-4xl');
+            const mainNav = document.getElementById('main-nav').querySelector('ul');
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const sideMenu = document.getElementById('side-menu');
+            const menuOverlay = document.getElementById('menu-overlay');
+
+            let currentSlide = 0;
+
+            // --- Functions ---
+
+            function initialize() {
+                slidesData.forEach((slide, index) => {
+                    const slideElement = document.createElement('section');
+                    slideElement.id = `slide-${index}`;
+                    slideElement.className = 'slide bg-white p-6 md:p-8 rounded-lg shadow-lg';
+                    slideElement.style.display = 'none';
+                    
+                    const titleElement = document.createElement('h2');
+                    titleElement.className = 'mb-6 text-3xl font-bold text-gray-800 border-b pb-3';
+                    titleElement.innerHTML = slide.title;
+                    
+                    const contentElement = document.createElement('div');
+                    contentElement.className = 'prose max-w-none text-gray-700 leading-relaxed';
+                    contentElement.innerHTML = slide.content;
+
+                    slideElement.appendChild(titleElement);
+                    slideElement.appendChild(contentElement);
+                    contentWrapper.appendChild(slideElement);
+
+                    if (slide.title === "Revision Questions") {
+                        const questionsContainer = slideElement.querySelector('.space-y-4');
+                        revisionQuestions.forEach((item, qIndex) => {
+                            const detail = document.createElement('details');
+                            const summary = document.createElement('summary');
+                            summary.innerHTML = `<div class="flex-grow">${qIndex + 1}. ${item.q}</div>`;
+                            
+                            const answerDiv = document.createElement('div');
+                            answerDiv.className = 'answer-content';
+                            answerDiv.innerHTML = `<p>${item.a}</p>`;
+
+                            detail.appendChild(summary);
+                            detail.appendChild(answerDiv);
+                            questionsContainer.appendChild(detail);
+                        });
+                    }
+                });
+
+                slidesData.forEach((slide, index) => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = slide.title;
+                    a.dataset.index = index;
+                    a.className = 'side-nav-link block p-3 rounded-md transition-colors duration-200 hover:bg-gray-700';
+                    li.appendChild(a);
+                    mainNav.appendChild(li);
+                });
+
+                showSlide(0, true);
+                setupEventListeners();
+            }
+
+            function renderMath(element) {
+                if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+                    window.MathJax.startup.promise.then(() => {
+                        window.MathJax.typesetPromise(element ? [element] : []);
+                    }).catch((err) => console.error('MathJax typeset failed: ', err));
+                }
+            }
+
+            function showSlide(index, isInitialLoad = false) {
+                if (index < 0 || index >= slidesData.length) return;
+                currentSlide = index;
+                
+                document.querySelectorAll('.slide').forEach(slide => {
+                    slide.style.display = 'none';
+                });
+                
+                const slideToShow = document.getElementById(`slide-${index}`);
+                slideToShow.style.display = 'block';
+                document.getElementById('content-wrapper').scrollTop = 0;
+                
+                renderMath(slideToShow);
+                updateUI();
+            }
+            
+            function updateUI() {
+                updateNavButtons();
+                updateActiveLink();
+                updateBreadcrumbs();
+            }
+
+            function updateNavButtons() {
+                prevBtn.disabled = currentSlide === 0;
+                nextBtn.disabled = currentSlide === slidesData.length - 1;
+            }
+
+            function updateActiveLink() {
+                document.querySelectorAll('.side-nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (parseInt(link.dataset.index) === currentSlide) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            function updateBreadcrumbs() {
+                breadcrumbs.innerHTML = `Home / <span class="text-gray-900">${slidesData[currentSlide].title}</span>`;
+            }
+            
+            function toggleMenu() {
+                sideMenu.classList.toggle('-translate-x-full');
+                menuOverlay.classList.toggle('hidden');
+            }
+
+            function setupEventListeners() {
+                nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+                prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+                
+                mainNav.addEventListener('click', (e) => {
+                    const link = e.target.closest('a');
+                    if (link && link.dataset.index) {
+                        e.preventDefault();
+                        const index = parseInt(link.dataset.index);
+                        showSlide(index);
+                        if (window.innerWidth < 768) {
+                           toggleMenu();
+                        }
+                    }
+                });
+
+                hamburgerBtn.addEventListener('click', toggleMenu);
+                menuOverlay.addEventListener('click', toggleMenu);
+            }
+
+            initialize();
+        });
+    </script>
+</body>
+</html>

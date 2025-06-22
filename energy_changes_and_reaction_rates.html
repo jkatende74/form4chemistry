@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Changes: An Interactive Guide</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- MathJax Configuration and CDN -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Internal CSS for Layout Control and Styling -->
+    <style>
+        /* Prevents the main browser window from scrolling */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Custom scrollbar styling for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a8a8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Style for the active link in the side navigation */
+        .side-nav-link.active {
+            background-color: #3b82f6; /* blue-500 */
+            color: #ffffff;
+            font-weight: 600;
+            border-left: 4px solid #ffffff;
+        }
+
+        /* Custom styles for details/summary to create accordion-like elements */
+        details > summary {
+            list-style: none; /* Remove default marker */
+            cursor: pointer;
+            padding: 0.75rem 1rem;
+            background-color: #f3f4f6; /* gray-100 */
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: start; /* FIX: Changed from 'center' to 'start' to fix alignment with LaTeX */
+            transition: background-color 0.2s;
+        }
+
+        details > summary:hover {
+             background-color: #e5e7eb; /* gray-200 */
+        }
+
+        details > summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            font-weight: 300;
+            transition: transform 0.3s ease-in-out;
+            margin-left: 1rem; /* Add some space between text and plus icon */
+        }
+        
+        details[open] > summary::after {
+            transform: rotate(45deg);
+        }
+
+        details .answer-content {
+            padding: 1rem;
+            border: 1px solid #e5e7eb; /* gray-200 */
+            border-top: none;
+            border-radius: 0 0 0.5rem 0.5rem;
+            margin-top: -0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="flex h-screen overflow-hidden bg-gray-100">
+        <!-- Side Navigation Menu -->
+        <aside id="side-menu" class="fixed top-0 left-0 z-40 w-64 h-full bg-gray-800 text-white transform -translate-x-full transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:flex-shrink-0">
+            <div class="p-5 border-b border-gray-700">
+                <h1 class="text-2xl font-bold">Energy Changes</h1>
+                <p class="text-sm text-gray-400">Chemistry Guide</p>
+            </div>
+            <nav id="main-nav" class="p-4 overflow-y-auto h-[calc(100%-80px)]">
+                <ul class="space-y-1">
+                    <!-- Navigation links will be dynamically populated and handled by JS -->
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Overlay for mobile view when side menu is open -->
+        <div id="menu-overlay" class="fixed inset-0 z-30 hidden bg-black bg-opacity-50 md:hidden"></div>
+
+        <!-- Main Content Area -->
+        <div class="flex flex-col flex-1 w-full h-full overflow-hidden">
+            <!-- Header: Hamburger Menu and Breadcrumbs -->
+            <header class="flex items-center justify-between flex-shrink-0 p-4 bg-white border-b border-gray-200">
+                <button id="hamburger-btn" class="p-2 text-gray-600 rounded-md md:hidden" aria-label="Open Menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+                <nav id="breadcrumbs" class="text-sm text-gray-500 font-medium">
+                    <!-- Breadcrumbs will be dynamically populated by JS -->
+                </nav>
+            </header>
+
+            <!-- Content Slides Wrapper -->
+            <main id="content-wrapper" class="flex-1 p-4 overflow-y-auto md:p-6 lg:p-8">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    <!-- Slides will be injected here from the slidesData object -->
+                </div>
+            </main>
+            
+            <!-- Navigation Buttons Footer -->
+            <footer class="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+                <div class="flex justify-between max-w-4xl mx-auto">
+                    <button id="prev-btn" class="px-6 py-2 font-semibold text-white bg-gray-500 rounded-lg shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Previous
+                    </button>
+                    <button id="next-btn" class="px-6 py-2 font-semibold text-white bg-blue-500 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Next
+                    </button>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DATA ---
+            // All content for the slides is stored in this object.
+            const slidesData = [
+                {
+                    title: "Introduction to Energy Changes",
+                    content: `
+                        <p class="text-lg mb-4">All chemical and physical processes are accompanied by energy changes. This energy is usually in the form of heat, and the study of these heat changes is called <strong>thermochemistry</strong>.</p>
+                        <p class="mb-4">For any reaction to occur, existing chemical bonds in the reactants must be broken, and new bonds must be formed in the products.</p>
+                        <ul class="pl-5 space-y-2 list-disc text-gray-700 mb-6">
+                            <li><strong>Bond Breaking:</strong> Always requires energy input from the surroundings. It is an endothermic process.</li>
+                            <li><strong>Bond Formation:</strong> Always releases energy to the surroundings. It is an exothermic process.</li>
+                        </ul>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h4 class="font-semibold text-lg text-blue-800 mb-2">Endothermic Reactions</h4>
+                                <p>A reaction where the energy absorbed to break bonds is <strong>greater</strong> than the energy released when forming new bonds. The system absorbs heat from the surroundings, causing the temperature of the surroundings to drop.</p>
+                                <p class="font-semibold mt-2">Overall \\(\\Delta H\\) is positive.</p>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                <h4 class="font-semibold text-lg text-red-800 mb-2">Exothermic Reactions</h4>
+                                <p>A reaction where the energy released when forming new bonds is <strong>greater</strong> than the energy absorbed to break bonds. The system releases heat into the surroundings, causing the temperature of the surroundings to rise.</p>
+                                <p class="font-semibold mt-2">Overall \\(\\Delta H\\) is negative.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Enthalpy of Solution",
+                    content: `
+                        <p class="mb-4">The <strong>enthalpy of solution (\\(\\Delta H_{sol}\\))</strong> is the heat change that occurs when one mole of a substance dissolves in a solvent to form an infinitely dilute solution. This process can be either endothermic or exothermic.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <h4 class="font-semibold text-lg text-blue-800 mb-2">Endothermic Example: Ammonium Nitrate</h4>
+                                <p>When ammonium nitrate (\\(NH_4NO_3\\)) dissolves in water, the beaker feels cold. This is because the energy required to break the ionic lattice of \\(NH_4NO_3\\) and the hydrogen bonds in water is greater than the energy released when the ions are hydrated.</p>
+                                <p class="bg-gray-100 p-3 rounded-md font-mono text-sm mt-2">\\(NH_4NO_{3(s)} \\xrightarrow{water} NH_4^+_{(aq)} + NO_3^-_{(aq)}\\)<br>\\(\\Delta H = +25.7\\) kJ/mol</p>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                <h4 class="font-semibold text-lg text-red-800 mb-2">Exothermic Example: Sodium Hydroxide</h4>
+                                <p>When sodium hydroxide (\\(NaOH\\)) dissolves in water, the beaker feels warm. The energy released when the \\(Na^+\\) and \\(OH^-\\)) ions are hydrated by water molecules is much greater than the energy needed to break the ionic lattice.</p>
+                                <p class="bg-gray-100 p-3 rounded-md font-mono text-sm mt-2">\\(NaOH_{(s)} \\xrightarrow{water} Na^+_{(aq)} + OH^-_{(aq)}\\)<br>\\(\\Delta H = -44.5\\) kJ/mol</p>
+                            </div>
+                        </div>
+                         <p class="mt-6">Similarly, dissolving concentrated sulphuric acid (\\(H_2SO_4\\)) in water is a highly exothermic process. <strong class="text-red-600">Safety rule:</strong> Always add acid to water, never the other way around, to help dissipate the heat safely.</p>
+                    `
+                },
+                {
+                    title: "Enthalpy of Displacement",
+                    content: `
+                        <p class="mb-4">The <strong>molar enthalpy of displacement (\\(\\Delta H_{disp}\\))</strong> is the heat change when one mole of a substance is displaced from its solution by a more reactive substance.</p>
+                        <p class="mb-4">These reactions are always exothermic. A classic example is the displacement of copper by zinc.</p>
+                        <div class="p-4 border rounded-lg bg-gray-50">
+                            <h4 class="font-bold text-lg mb-2">Example: Zinc and Copper(II) Sulphate</h4>
+                            <p><strong>Reaction:</strong> When zinc powder is added to a blue solution of copper(II) sulphate, the temperature rises.</p>
+                            <p class="bg-gray-100 p-3 rounded-md font-mono text-sm my-2">Ionic Equation: \\(Zn_{(s)} + Cu^{2+}_{(aq)} \\rightarrow Zn^{2+}_{(aq)} + Cu_{(s)}\\)</p>
+                            <p><strong>Observations:</strong></p>
+                            <ul class="list-disc pl-5 space-y-1">
+                                <li>The blue colour of the solution fades as \\(Cu^{2+}\\) ions are used up.</li>
+                                <li>A brown solid (copper metal) is deposited.</li>
+                                <li>The temperature of the solution increases.</li>
+                            </ul>
+                            <p class="mt-2">The magnitude of \\(\\Delta H_{disp}\\) depends on the positions of the two metals in the reactivity series. The further apart they are, the more exothermic the reaction (i.e., a larger negative \\(\\Delta H\\) value).</p>
+                        </div>
+                    `
+                },
+                 {
+                    title: "Enthalpy of Neutralization",
+                    content: `
+                        <p class="mb-4">The <strong>molar enthalpy of neutralization (\\(\\Delta H_{neut}\\))</strong> is the heat change that occurs when one mole of water is formed from the reaction of an acid and a base under standard conditions.</p>
+                        <p class="mb-4">Neutralization reactions are always exothermic.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Strong Acid & Strong Base</h3>
+                        <p>The reaction between any strong acid (e.g., \\(HCl\\)) and any strong base (e.g., \\(NaOH\\)) always has the same enthalpy of neutralization (approx. -57 kJ/mol). This is because the reaction is essentially the same at the ionic level: the formation of water from its ions.</p>
+                        <p class="bg-gray-100 p-3 rounded-md font-mono text-sm my-2">Net Ionic Equation: \\(H^+_{(aq)} + OH^-_{(aq)} \\rightarrow H_2O_{(l)} \\quad \\Delta H \\approx -57 \\text{ kJ/mol}\\)</p>
+                        
+                        <h3 class="text-xl font-bold text-gray-800 mb-2 mt-6">Weak Acid or Weak Base</h3>
+                        <p>If a weak acid or weak base is involved, the enthalpy of neutralization is less exothermic (a smaller negative value). For example, the neutralization of ethanoic acid (weak acid) by sodium hydroxide gives \\(\\Delta H = -55.2\\) kJ/mol.</p>
+                        <p>This is because some of the energy released from the H⁺ and OH⁻ reaction is used to fully ionize the weak acid or base molecules first. This energy for ionization is called the enthalpy of dissociation.</p>
+                    `
+                },
+                 {
+                    title: "Hess's Law & Energy Cycles",
+                    content: `
+                        <p class="mb-4">Hess's Law, also known as the law of constant heat summation, is a fundamental principle in thermochemistry. It is an application of the law of conservation of energy.</p>
+                        <div class="p-4 border-2 border-blue-500 rounded-lg bg-blue-50">
+                            <h4 class="font-bold text-lg mb-2 text-blue-800">Hess's Law</h4>
+                            <p class="text-lg">The total enthalpy change for a chemical reaction is the same, regardless of the route taken from reactants to products, provided the initial and final conditions are the same.</p>
+                        </div>
+                        <p class="mt-6 mb-4">This law is incredibly useful for calculating enthalpy changes that are difficult or impossible to measure directly by experiment. We can do this using an <strong>energy cycle diagram</strong>.</p>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Example: Formation of Propane</h3>
+                        <p>We cannot form propane (\\(C_3H_8\\)) directly from carbon and hydrogen. But we can find its enthalpy of formation (Route 1) by using an alternative path (Route 2) involving the combustion of the elements and propane, and then applying Hess's Law.</p>
+                        <div class="text-center bg-gray-100 p-6 rounded-lg">
+                            <p class="font-semibold">[Energy Cycle Diagram: Formation of Propane]</p>
+                            <p class="text-sm text-gray-600 mt-2">An energy cycle shows reactants (e.g., C, H₂) and products (e.g., C₃H₈) at the top. A common intermediate (e.g., combustion products CO₂, H₂O) is shown at the bottom. Hess's law states that \\(\\Delta H_{route1} = \\Delta H_{route2}\\).</p>
+                        </div>
+                    `
+                },
+                {
+                    title: "Fuels and Combustion",
+                    content: `
+                        <p class="mb-4">A <strong>fuel</strong> is any substance that can be burned (combusted) to produce useful energy, usually in the form of heat or power.</p>
+                        <p class="mb-4">The <strong>enthalpy of combustion (\\(\\Delta H_c\\))</strong> is the heat change when one mole of a substance is completely burned in excess oxygen under standard conditions. Combustion is always an exothermic process (\\(\\Delta H_c\\) is always negative).</p>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Examples of Fuels</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-gray-50 p-3 rounded-lg border"><h4 class="font-semibold">Solid Fuels</h4><ul class="list-disc pl-5 text-sm"><li>Coal</li><li>Charcoal</li><li>Wood</li></ul></div>
+                            <div class="bg-gray-50 p-3 rounded-lg border"><h4 class="font-semibold">Liquid Fuels</h4><ul class="list-disc pl-5 text-sm"><li>Petrol</li><li>Kerosene</li><li>Ethanol</li></ul></div>
+                            <div class="bg-gray-50 p-3 rounded-lg border"><h4 class="font-semibold">Gaseous Fuels</h4><ul class="list-disc pl-5 text-sm"><li>Natural Gas (Methane)</li><li>Hydrogen</li><li>Biogas</li></ul></div>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mt-6 mb-2">Choosing a Good Fuel</h3>
+                        <p>The choice of a good fuel depends on several factors:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li><strong>High Heat Value:</strong> It should produce a large amount of heat per unit mass or volume.</li>
+                            <li><strong>Availability and Cost:</strong> It should be readily available at a low cost.</li>
+                            <li><strong>Safety:</strong> It should be safe to store and transport.</li>
+                            <li><strong>Environmental Impact:</strong> It should produce minimal pollution (e.g., no sulphur dioxide or soot).</li>
+                        </ul>
+                    `
+                },
+                {
+                    title: "Key Experiments",
+                    content: `
+                        <p class="mb-6">This section summarizes key experiments for measuring heat changes, known as calorimetry. The main principle is to use an insulated container (like a plastic cup) to minimize heat loss.</p>
+                        <div class="space-y-6">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">1. Determining Enthalpy of Solution</h4>
+                                <p><strong>Objective:</strong> To measure the heat change when a salt dissolves in water.</p>
+                                <p><strong>Procedure:</strong> A known mass of a salt (e.g., \\(NH_4NO_3\\) or \\(NaOH\\)) is added to a known volume of water in a plastic calorimeter. The initial and final (maximum or minimum) temperatures are recorded.</p>
+                                <p><strong>Conclusion:</strong> By calculating the heat absorbed or released by the water (\\(q = mc\\Delta T\\)), one can find the molar enthalpy of solution. A temperature drop indicates an endothermic process (e.g., \\(NH_4NO_3\\)), while a temperature rise indicates an exothermic process (e.g., \\(NaOH\\)).</p>
+                            </div>
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">2. Determining Enthalpy of Displacement</h4>
+                                <p><strong>Objective:</strong> To measure the heat change in a displacement reaction.</p>
+                                <p><strong>Procedure:</strong> A known mass of a reactive metal (e.g., Zinc powder) is added to a known volume and concentration of a less reactive metal's salt solution (e.g., \\(CuSO_4\\)). The maximum temperature rise is recorded.</p>
+                                <p><strong>Conclusion:</strong> Displacement reactions are exothermic. The heat released can be calculated to find the molar enthalpy of displacement.</p>
+                            </div>
+                             <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="font-bold text-lg mb-2">3. Determining Enthalpy of Neutralization</h4>
+                                <p><strong>Objective:</strong> To measure the heat released during an acid-base neutralization.</p>
+                                <p><strong>Procedure:</strong> Known volumes and concentrations of an acid and a base are mixed in a calorimeter. The maximum temperature rise is measured.</p>
+                                <p><strong>Conclusion:</strong> The heat released is used to calculate the molar enthalpy of neutralization, which is the heat change per mole of water formed. This value is constant for strong acid-strong base reactions.</p>
+                            </div>
+                        </div>
+                    `
+                },
+                {
+                    title: "Worked Examples",
+                    content: `
+                        <p class="mb-6">Apply your knowledge by working through these examples from the syllabus. Click on a problem to reveal the detailed solution.</p>
+                        <div class="space-y-4">
+                            <details>
+                                <summary>Example 1: Calculating Heat of Combustion</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">When 8.0 g of sulphur is completely burned in a calorimeter, the heat evolved raises the temperature of 500 cm³ of water by 35°C. Calculate the molar heat of combustion of sulphur. (Specific heat capacity of water = 4.2 Jg⁻¹K⁻¹, Density of water = 1 g/cm³, S = 32).</p>
+                                    <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Calculate the heat absorbed by water (q):</strong><br>Mass of water (m) = 500 cm³ × 1 g/cm³ = 500 g<br>Temperature change (\\(\\Delta T\\)) = 35°C<br>\\(q = m \\times c \\times \\Delta T\\)<br>\\(q = 500g \\times 4.2 Jg^{-1}K^{-1} \\times 35K = 73,500 J = 73.5 kJ\\)</li>
+                                        <li><strong>Calculate moles of sulphur burned:</strong><br>Moles = Mass / Molar mass = 8.0g / 32.0 g/mol = 0.25 mol</li>
+                                        <li><strong>Calculate molar heat of combustion (\\(\\Delta H_c\\)):</strong><br>\\(\\Delta H_c = -q / \\text{moles}\\) (negative sign because combustion is exothermic)<br>\\(\\Delta H_c = -73.5 kJ / 0.25 mol = -294\\) kJ/mol</li>
+                                    </ol>
+                                </div>
+                            </details>
+                            <details>
+                                <summary>Example 2: Calculating Enthalpy of Neutralization</summary>
+                                <div class="answer-content">
+                                    <p class="font-semibold mb-2">Problem:</p>
+                                    <p class="mb-4">When 50 cm³ of 2.0 M HCl was neutralised by 50 cm³ of 2.0 M NaOH, both initially at 20°C, the temperature of the mixture rose to 33.7°C. Calculate the molar enthalpy of neutralization. (Assume c = 4.2 Jg⁻¹K⁻¹ and density = 1 g/cm³).</p>
+                                     <p class="font-semibold mb-2">Solution:</p>
+                                    <ol class="list-decimal pl-5 space-y-2">
+                                        <li><strong>Calculate heat released (q):</strong><br>Total mass (m) = (50 + 50) cm³ × 1 g/cm³ = 100 g<br>Temperature change (\\(\\Delta T\\)) = 33.7 - 20.0 = 13.7°C<br>\\(q = m \\times c \\times \\Delta T\\)<br>\\(q = 100g \\times 4.2 Jg^{-1}K^{-1} \\times 13.7K = 5754 J = 5.754 kJ\\)</li>
+                                        <li><strong>Calculate moles of water formed:</strong><br>Moles of HCl = 0.050 L × 2.0 mol/L = 0.1 mol<br>Moles of NaOH = 0.050 L × 2.0 mol/L = 0.1 mol<br>Since the reaction is 1:1, moles of water formed = 0.1 mol.</li>
+                                        <li><strong>Calculate molar enthalpy of neutralization (\\(\\Delta H_{neut}\\)):</strong><br>\\(\\Delta H_{neut} = -q / \\text{moles of } H_2O\\)<br>\\(\\Delta H_{neut} = -5.754 kJ / 0.1 mol = -57.54\\) kJ/mol</li>
+                                    </ol>
+                                </div>
+                            </details>
+                        </div>
+                    `
+                },
+                {
+                    title: "Revision Questions",
+                    content: `
+                        <p class="mb-6">Test your understanding of the chapter with these revision questions. Click on a question to reveal the answer.</p>
+                        <div class="space-y-4">
+                            <!-- Questions will be generated here by JS -->
+                        </div>
+                    `
+                }
+            ];
+
+            const revisionQuestions = [
+                { q: "Write the equation for the complete combustion of ethanol (\\(C_2H_5OH\\)), given \\(\\Delta H_c \\approx -1250\\) kJ/mol.", a: "\\(C_2H_5OH_{(l)} + 3O_{2(g)} \\rightarrow 2CO_{2(g)} + 3H_2O_{(l)} \\quad \\Delta H = -1250 \\text{ kJ/mol}\\)" },
+                { q: "When 8.0 g of sulphur is burned, it heats 500 cm³ of water by 35°C. Calculate the heat of combustion of sulphur. (c=4.2, S=32)", a: "Heat evolved = 0.5kg × 4.2 × 35K = 73.5 kJ. Moles S = 8/32 = 0.25 mol. \\(\\Delta H_c = -73.5 / 0.25 = -294\\) kJ/mol." },
+                { q: "Given \\(2SO_2(g) + O_2(g) \\rightarrow 2SO_3(g), \\Delta H = -185\\) kJ. What is the heat of combustion per mole of \\(SO_2\\)?", a: "The heat change is for 2 moles of \\(SO_2\\). For one mole, \\(\\Delta H_c = -185 \\text{ kJ} / 2 = -92.5 \\text{ kJ/mol}\\)." },
+                { q: "What would be the heat evolved if 0.2 moles of \\(SO_3\\) were formed in the reaction \\(2SO_2 + O_2 \\rightarrow 2SO_3, \\Delta H = -185\\) kJ?", a: "Heat per mole of \\(SO_3\\) is 92.5 kJ. Heat for 0.2 moles = 0.2 mol × 92.5 kJ/mol = 18.5 kJ." },
+                { q: "Define standard heat of formation of a substance.", a: "The enthalpy change when one mole of a compound is formed from its constituent elements in their standard states." },
+                { q: "Write an equation for the formation of ethanol (\\(C_2H_5OH\\)) from its elements.", a: "\\(2C_{(s, graphite)} + 3H_{2(g)} + \\frac{1}{2}O_{2(g)} \\rightarrow C_2H_5OH_{(l)}\\)" },
+                { q: "Explain why hydration energies are negative (exothermic).", a: "Hydration is the process of forming bonds/attractions between ions and polar water molecules. Bond formation is an exothermic process, so energy is released, and \\(\\Delta H\\) is negative." },
+                { q: "Explain the trend in hydration energy for \\(Na^+, Mg^{2+}, Al^{3+}\\).", a: "Across the period, ionic radius decreases and charge increases. This leads to a higher charge density. The attraction between the ion and water molecules becomes stronger, so more energy is released. Hydration energy becomes more exothermic (more negative) from \\(Na^+\\) to \\(Al^{3+}\\)." },
+                { q: "State Hess’s Law.", a: "The total enthalpy change for a chemical reaction is independent of the route taken, provided the initial and final conditions are the same." },
+                { q: "Calculate \\(\\Delta H_f\\) for propane (\\(C_3H_8\\)) given: \\(\\Delta H_c(C)=-393\\), \\(\\Delta H_f(H_2O)=-286\\), \\(\\Delta H_c(C_3H_8)=-2209\\) kJ/mol.", a: "\\(\\Delta H_f = [3 \\times \\Delta H_c(C) + 4 \\times \\Delta H_f(H_2O)] - [\\Delta H_c(C_3H_8)] = [3(-393) + 4(-286)] - [-2209] = -1179 - 1144 + 2209 = -114\\) kJ/mol." },
+                { q: "Suggest a major source of error in a simple coffee-cup calorimeter experiment.", a: "Heat loss to the surroundings, as the plastic cup is not a perfect insulator." },
+                { q: "Why is the molar enthalpy of neutralisation of sulphuric acid with NaOH higher than that of ethanoic acid?", a: "Ethanoic acid is a weak acid and does not fully ionize. Some energy released during neutralization is used up to dissociate the ethanoic acid molecules, resulting in a less exothermic overall value." },
+                { q: "Calculate the molar enthalpy of neutralisation if 50cm³ of 2M HCl and 50cm³ of 2M NaOH, both at 20°C, reach a max temp of 33.7°C.", a: "q = 100g × 4.2 × 13.7K = 5754 J. Moles = 0.05L × 2M = 0.1 mol. \\(\\Delta H = -5.754 / 0.1 = -57.54\\) kJ/mol." },
+                { q: "Draw an energy cycle diagram linking the enthalpy of formation of ethanol with its combustion.", a: "A triangular diagram with Elements (C, H₂, O₂) at the top, Ethanol (C₂H₅OH) on one side, and Combustion Products (CO₂, H₂O) at the bottom. Arrows: Elements -> Ethanol (\\(\\Delta H_f\\)), Ethanol -> Products (\\(\\Delta H_c\\)), Elements -> Products (Sum of element combustions)." },
+                { q: "When 2.65 g of \\(NH_4NO_3\\) dissolves in 100 cm³ of water, the temp drops by 2°C. Calc molar heat of solution (N=14, H=1, O=16).", a: "q = 100g × 4.2 × 2K = 840 J. Molar mass \\(NH_4NO_3\\) = 80 g/mol. Moles = 2.65/80 = 0.033125 mol. \\(\\Delta H_{sol} = +840J / 0.033125mol = +25357 J/mol \\approx +25.4\\) kJ/mol." },
+                { q: "0.5 g of element Q heats 250 cm³ of water from 32 to 50°C. If \\(\\Delta H_c\\) is –360 kJ mol⁻¹, find the RAM of Q.", a: "q = 250g × 4.2 × 18K = 18.9 kJ. Moles of Q = 18.9kJ / 360kJ/mol = 0.0525 mol. RAM = mass/moles = 0.5g / 0.0525mol ≈ 9.52." },
+                { q: "Why use a plastic cup instead of a metal beaker for calorimetry?", a: "Plastic is a better insulator (poor conductor of heat) than metal. It minimizes heat loss to the surroundings, leading to a more accurate measurement of the temperature change." },
+                { q: "Write the ionic equation for the reaction between zinc and copper(II) sulphate.", a: "\\(Zn_{(s)} + Cu^{2+}_{(aq)} \\rightarrow Zn^{2+}_{(aq)} + Cu_{(s)}\\)" },
+                { q: "Draw an energy cycle for dissolving MgCl₂.", a: "A cycle connecting \\(MgCl_{2(s)}\\), gaseous ions \\(Mg^{2+}_{(g)} + 2Cl^-_{(g)}\\), and aqueous ions \\(Mg^{2+}_{(aq)} + 2Cl^-_{(aq)}\\). The steps are Lattice Enthalpy and Hydration Enthalpy, which sum to the Enthalpy of Solution." },
+                { q: "Calculate \\(\\Delta H_{sol}\\) for MgCl₂ given Lattice Enthalpy = +2526, \\(\\Delta H_{hyd}(Mg^{2+}) = -1920\\), \\(\\Delta H_{hyd}(Cl^-) = -364\\) kJ/mol.", a: "\\(\\Delta H_{sol} = LE + \\Delta H_{hyd}(Mg^{2+}) + 2 \\times \\Delta H_{hyd}(Cl^-) = 2526 - 1920 + 2(-364) = 2526 - 1920 - 728 = -122\\) kJ/mol." },
+                { q: "Using the answer from Q20, draw the energy level diagram for dissolving MgCl₂.", a: "An energy level diagram with reactants \\(MgCl_{2(s)}\\) at a higher energy level and products \\(Mg^{2+}_{(aq)} + 2Cl^-_{(aq)}\\) at a lower level. A downward arrow indicates the exothermic \\(\\Delta H_{sol}\\) of -122 kJ/mol." },
+                { q: "Calculate \\(\\Delta H_f\\) of ethyne (\\(C_2H_2\\)) given \\(\\Delta H_c(C)=-393, \\Delta H_c(H_2)=-286, \\Delta H_c(C_2H_2)=-1300\\) kJ/mol.", a: "\\(\\Delta H_f = [2\\Delta H_c(C) + \\Delta H_c(H_2)] - [\\Delta H_c(C_2H_2)] = [2(-393) + (-286)] - [-1300] = -786 - 286 + 1300 = +228\\) kJ/mol." },
+                { q: "Why does temperature remain constant during melting and boiling?", a: "The added heat energy (latent heat) is used to overcome intermolecular forces and change the state, not to increase the kinetic energy of the particles, so the temperature does not rise." },
+                { q: "What is the name for the heat energy required for (a) melting and (b) boiling?", a: "(a) Latent heat of fusion. (b) Latent heat of vaporization." },
+                { q: "Is dissolving ammonium nitrate in water exothermic or endothermic? Explain.", a: "Endothermic. The process absorbs heat from the surroundings, causing the temperature of the water to drop." },
+                { q: "Is dissolving sodium hydroxide in water exothermic or endothermic? Explain.", a: "Exothermic. The process releases heat into the surroundings, causing the temperature of the water to rise." },
+                { q: "Is dissolving concentrated sulphuric acid in water exothermic or endothermic?", a: "Strongly exothermic. A large amount of heat is released." },
+                { q: "Is the reaction between zinc and copper(II) sulphate solution exothermic or endothermic?", a: "Exothermic. The reaction releases heat, causing the temperature of the solution to increase." },
+                { q: "Why is the enthalpy of neutralization for a weak acid less exothermic than for a strong acid?", a: "Energy is required to first ionize the weak acid molecules before neutralization can occur. This energy consumption reduces the net amount of heat released." },
+                { q: "What is a fuel?", a: "A substance that can be combusted (burned in oxygen) to produce useful energy." }
+            ];
+
+            // --- DOM Elements ---
+            const contentWrapper = document.getElementById('content-wrapper').querySelector('.max-w-4xl');
+            const mainNav = document.getElementById('main-nav').querySelector('ul');
+            const breadcrumbs = document.getElementById('breadcrumbs');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const hamburgerBtn = document.getElementById('hamburger-btn');
+            const sideMenu = document.getElementById('side-menu');
+            const menuOverlay = document.getElementById('menu-overlay');
+
+            let currentSlide = 0;
+
+            // --- Functions ---
+
+            /**
+             * Initializes the application by creating slides and navigation.
+             */
+            function initialize() {
+                // Create slide elements from data
+                slidesData.forEach((slide, index) => {
+                    const slideElement = document.createElement('section');
+                    slideElement.id = `slide-${index}`;
+                    slideElement.className = 'slide bg-white p-6 md:p-8 rounded-lg shadow-lg';
+                    slideElement.style.display = 'none'; // Hide all initially
+                    
+                    const titleElement = document.createElement('h2');
+                    titleElement.className = 'mb-6 text-3xl font-bold text-gray-800 border-b pb-3';
+                    titleElement.innerHTML = slide.title;
+                    
+                    const contentElement = document.createElement('div');
+                    contentElement.className = 'prose max-w-none text-gray-700 leading-relaxed';
+                    contentElement.innerHTML = slide.content;
+
+                    slideElement.appendChild(titleElement);
+                    slideElement.appendChild(contentElement);
+                    contentWrapper.appendChild(slideElement);
+
+                    // If it's the revision questions slide, populate the questions
+                    if (slide.title === "Revision Questions") {
+                        const questionsContainer = slideElement.querySelector('.space-y-4');
+                        revisionQuestions.forEach((item, qIndex) => {
+                            const detail = document.createElement('details');
+                            const summary = document.createElement('summary');
+                            summary.innerHTML = `<div>${qIndex + 1}. ${item.q}</div>`; // Wrap text in a div for better alignment control
+                            
+                            const answerDiv = document.createElement('div');
+                            answerDiv.className = 'answer-content';
+                            answerDiv.innerHTML = `<p>${item.a}</p>`; // Use innerHTML for MathJax
+
+                            detail.appendChild(summary);
+                            detail.appendChild(answerDiv);
+                            questionsContainer.appendChild(detail);
+                        });
+                    }
+                });
+
+                // Create navigation links
+                slidesData.forEach((slide, index) => {
+                    const li = document.createElement('li');
+                    const a = document.createElement('a');
+                    a.href = '#';
+                    a.textContent = slide.title;
+                    a.dataset.index = index;
+                    a.className = 'side-nav-link block p-3 rounded-md transition-colors duration-200 hover:bg-gray-700';
+                    li.appendChild(a);
+                    mainNav.appendChild(li);
+                });
+
+                // Show the first slide
+                showSlide(0, true); // Pass true for initial load
+
+                // Add event listeners
+                setupEventListeners();
+            }
+
+            /**
+             * Renders MathJax content safely.
+             */
+            function renderMath() {
+                if (window.MathJax && window.MathJax.startup.promise) {
+                    window.MathJax.startup.promise.then(() => {
+                        window.MathJax.typesetPromise();
+                    }).catch((err) => console.log('MathJax typeset failed: ', err));
+                }
+            }
+
+
+            /**
+             * Displays a specific slide and updates UI elements.
+             * @param {number} index - The index of the slide to show.
+             * @param {boolean} isInitialLoad - Flag for the first time load.
+             */
+            function showSlide(index, isInitialLoad = false) {
+                // Ensure index is within bounds
+                if (index < 0 || index >= slidesData.length) return;
+
+                currentSlide = index;
+                
+                document.querySelectorAll('.slide').forEach(slide => {
+                    slide.style.display = 'none';
+                });
+                
+                const slideToShow = document.getElementById(`slide-${index}`);
+                slideToShow.style.display = 'block';
+                document.getElementById('content-wrapper').scrollTop = 0;
+                
+                // On initial load, render all math. On subsequent loads, render just the visible slide.
+                if(isInitialLoad) {
+                    renderMath();
+                } else {
+                     if (window.MathJax && window.MathJax.startup.promise) {
+                        window.MathJax.startup.promise.then(() => {
+                            window.MathJax.typesetPromise([slideToShow]);
+                        }).catch((err) => console.log('MathJax typeset failed for slide: ', err));
+                    }
+                }
+
+                updateUI();
+            }
+            
+            function updateUI() {
+                updateNavButtons();
+                updateActiveLink();
+                updateBreadcrumbs();
+            }
+
+            function updateNavButtons() {
+                prevBtn.disabled = currentSlide === 0;
+                nextBtn.disabled = currentSlide === slidesData.length - 1;
+            }
+
+            function updateActiveLink() {
+                document.querySelectorAll('.side-nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (parseInt(link.dataset.index) === currentSlide) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            function updateBreadcrumbs() {
+                breadcrumbs.innerHTML = `Home / <span class="text-gray-900">${slidesData[currentSlide].title}</span>`;
+            }
+            
+            function toggleMenu() {
+                sideMenu.classList.toggle('-translate-x-full');
+                menuOverlay.classList.toggle('hidden');
+            }
+
+            function setupEventListeners() {
+                nextBtn.addEventListener('click', () => showSlide(currentSlide + 1));
+                prevBtn.addEventListener('click', () => showSlide(currentSlide - 1));
+                
+                mainNav.addEventListener('click', (e) => {
+                    // Find the anchor tag, even if a child element was clicked
+                    const link = e.target.closest('a');
+                    if (link && link.dataset.index) {
+                        e.preventDefault();
+                        const index = parseInt(link.dataset.index);
+                        showSlide(index);
+                        if (window.innerWidth < 768) { // md breakpoint
+                           toggleMenu();
+                        }
+                    }
+                });
+
+                hamburgerBtn.addEventListener('click', toggleMenu);
+                menuOverlay.addEventListener('click', toggleMenu);
+            }
+
+            // --- Initialization ---
+            initialize();
+        });
+    </script>
+</body>
+</html>

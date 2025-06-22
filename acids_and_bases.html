@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acids and Bases: An Interactive Learning Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Basic styles for layout */
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden; /* Prevent scrolling of the whole page */
+        }
+        .main-content {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .content-wrapper {
+            display: flex;
+            flex-direction: row;
+        }
+        .side-nav {
+            width: 250px;
+            position: sticky;
+            top: 20px;
+            height: calc(100vh - 40px);
+            flex-shrink: 0;
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .side-nav a.is-active-link {
+            font-weight: 700;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+        }
+        .slide {
+            display: none; /* Hide all slides by default */
+        }
+        .slide.is-active {
+            display: block; /* Show only the active slide */
+        }
+        /* Styles for expandable sections */
+        details > summary {
+            cursor: pointer;
+            font-weight: 600;
+            background-color: #f3f4f6;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        details > summary::after {
+            content: '+';
+            font-size: 1.5rem;
+            transition: transform 0.2s ease-in-out;
+        }
+        details[open] > summary::after {
+            transform: rotate(45deg);
+        }
+        details > summary:hover {
+            background-color: #e5e7eb;
+        }
+        details[open] > summary {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        details > div {
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+            background-color: #fafafa;
+        }
+        .prose {
+             line-height: 1.7;
+        }
+        /* Styles for nav buttons */
+        .nav-button {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.2s;
+        }
+        .nav-button:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+        .nav-button-disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        /* Mobile Hamburger Menu Styles */
+        .hamburger-button { display: none; }
+        @media (max-width: 768px) {
+            .content-wrapper { flex-direction: column; }
+            .hamburger-button {
+                display: block;
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                z-index: 1001;
+                background-color: white;
+                border-radius: 50%;
+                padding: 0.5rem;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            }
+            .side-nav {
+                position: fixed; top: 0; left: 0; width: 280px; height: 100%;
+                background-color: white; z-index: 1000;
+                transform: translateX(-100%);
+                box-shadow: 0 0 15px rgba(0,0,0,0.2); padding-top: 4rem;
+                display: flex;
+                flex-direction: column;
+            }
+            .side-nav.is-active { transform: translateX(0); }
+            .nav-overlay {
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.5); z-index: 999; display: none;
+            }
+            .nav-overlay.is-active { display: block; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <button id="hamburger-button" class="hamburger-button">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+    </button>
+    <div id="nav-overlay" class="nav-overlay"></div>
+
+    <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 h-full flex flex-col">
+        <header class="mb-4 pb-4 border-b flex-shrink-0">
+            <h1 class="text-3xl md:text-4xl font-bold text-center text-blue-600">Acids, Bases, and Salts</h1>
+            <p class="text-center text-md md:text-lg text-gray-600 mt-2">An Interactive Learning Guide</p>
+        </header>
+        
+        <!-- Breadcrumb Navigation -->
+        <nav id="breadcrumb" class="mb-4 text-sm text-gray-500 flex-shrink-0">
+            <!-- Breadcrumb will be dynamically inserted here -->
+        </nav>
+
+        <div class="content-wrapper flex-1 overflow-hidden">
+            <nav id="side-nav" class="side-nav p-4 bg-white rounded-lg shadow-md md:mr-8">
+                <h2 class="text-lg font-semibold mb-4 border-b pb-2 flex-shrink-0">Chapter Outline</h2>
+                <ul class="space-y-2 flex-1 overflow-y-auto">
+                    <li><a href="#introduction" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Introduction</a></li>
+                    <li><a href="#strength" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Strength of Acids & Bases</a></li>
+                    <li><a href="#solvents" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Role of Solvents</a></li>
+                    <li><a href="#amphoteric" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Amphoteric Substances</a></li>
+                    <li><a href="#salts" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Salts and Solubility</a></li>
+                    <li><a href="#hardness" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Water Hardness</a></li>
+                    <li><a href="#experiments" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Key Experiments</a></li>
+                    <li><a href="#revision" class="block py-2 px-3 rounded-md text-blue-500 hover:bg-blue-50">Revision Questions</a></li>
+                </ul>
+            </nav>
+
+            <main class="main-content flex-1 bg-white p-6 rounded-lg shadow-md">
+                <!-- Slides will be inserted here -->
+                <section id="introduction" class="slide">
+                    <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Introduction to Acids and Bases</h2>
+                    <p class="mb-4 text-lg">This chapter expands on your foundational knowledge of acids, bases, and salts from Forms One and Two. It delves deeper into the chemical principles governing their behavior and properties.</p>
+                    <h3 class="text-xl font-semibold mt-6 mb-2">Learning Objectives</h3>
+                    <ul class="list-disc list-inside space-y-2 bg-gray-100 p-4 rounded-lg">
+                         <li>Provide modern definitions for acids, bases, and salts.</li>
+                        <li>Differentiate between strong and weak acids and bases based on their degree of ionization.</li>
+                        <li>Explain why the choice of solvent is critical for a substance to exhibit acidic or basic properties.</li>
+                        <li>Quantitatively compare the strength of acids and bases using pH and electrical conductivity measurements.</li>
+                        <li>Confidently write and interpret formula and ionic equations for neutralization and precipitation reactions.</li>
+                        <li>Define solubility and apply solubility curves to practical scenarios like salt extraction.</li>
+                        <li>Describe the chemical causes of temporary and permanent water hardness and the methods to remove them.</li>
+                    </ul>
+                </section>
+
+                <section id="strength" class="slide">
+                    <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Strength of Acids and Bases</h2>
+                     <p class="mb-4">The strength of an acid or a base is determined by the degree to which it ionizes or dissociates in water. We can compare their strengths by measuring their <strong>pH values</strong> and <strong>electrical conductivity</strong>.</p>
+                    <h3 class="text-xl font-semibold mt-6 mb-2">Acids</h3>
+                    <p>Strong acids ionize completely in water, releasing a high concentration of hydrogen ions (\(H^+\)). Weak acids only ionize partially, establishing an equilibrium.</p>
+                    <p><strong>Strong Acid Example:</strong> \(HCl_{(aq)} \rightarrow H^+_{(aq)} + Cl^-_{(aq)}\)</p>
+                    <p><strong>Weak Acid Example:</strong> \(CH_3COOH_{(aq)} \rightleftharpoons H^+_{(aq)} + CH_3COO^-_{(aq)}\)</p>
+                    <details class="mt-4"><summary>Worked Example: Comparing Acid Strengths</summary>
+                        <div class="prose">
+                            <p>In an experiment, 2M hydrochloric acid (\(HCl\)) and 2M ethanoic acid (\(CH_3COOH\)) are compared. Which acid is stronger and why?</p>
+                            <p><strong>Answer:</strong> <strong>Hydrochloric acid is the stronger acid</strong>.</p>
+                            <p><strong>Reasoning:</strong></p>
+                            <ul>
+                                <li><strong>pH Value:</strong> Hydrochloric acid has a lower pH value (e.g., pH 1) compared to ethanoic acid (e.g., pH 3-4). A lower pH indicates a higher concentration of \(H^+\) ions.</li>
+                                <li><strong>Electrical Conductivity:</strong> The \(HCl\) solution has a higher electrical conductivity because it contains a greater concentration of mobile ions (\(H^+\) and \(Cl^-\)) to carry the electric current. This is a direct result of its complete ionization.</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <h3 class="text-xl font-semibold mt-6 mb-2">Bases and Alkalis</h3>
+                    <p>An alkali is a base that is soluble in water. Strong alkalis dissociate completely in water to produce a high concentration of hydroxide ions (\(OH^-\)).</p>
+                    <p><strong>Strong Alkali Example:</strong> \(NaOH_{(aq)} \rightarrow Na^+_{(aq)} + OH^-_{(aq)}\)</p>
+                    <p><strong>Weak Alkali Example:</strong> \(NH_{3(g)} + H_2O_{(l)} \rightleftharpoons NH_{4(aq)}^+ + OH^-_{(aq)}\)</p>
+                     <details class="mt-4">
+                        <summary>Worked Example: Comparing Alkali Strengths</summary>
+                        <div class="prose">
+                          <p>Compare the strength of 2M sodium hydroxide (\(NaOH\)) and 2M ammonia solution (\(NH_3\)).</p>
+                          <p><strong>Answer:</strong> <strong>Sodium hydroxide is the stronger alkali</strong>.</p>
+                          <p><strong>Reasoning:</strong></p>
+                          <ul>
+                            <li><strong>pH Value:</strong> Sodium hydroxide solution has a higher pH value (e.g., pH 14) than ammonia solution (e.g., pH 10-11), indicating a higher concentration of \(OH^-\) ions.</li>
+                            <li><strong>Electrical Conductivity:</strong> \(NaOH\) solution has higher conductivity due to the high concentration of \(Na^+\) and \(OH^-\) ions from complete dissociation.</li>
+                          </ul>
+                        </div>
+                    </details>
+                </section>
+
+                <section id="solvents" class="slide">
+                    <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Role of Solvents</h2>
+                    <p class="mb-4">For a substance to show acidic or basic properties, it must be able to form ions. The solvent plays a critical role in facilitating this ionization.</p>
+                    <ul class="list-disc list-inside space-y-3 mt-4">
+                        <li><strong>In Polar Solvents (like Water):</strong> Dry hydrogen chloride (\(HCl\)) is a molecular compound. When dissolved in water, the polar water molecules attract the hydrogen and chlorine atoms, breaking the covalent bond and allowing ionization: \(HCl_{(g)} + H_2O_{(l)} \rightarrow H_3O^+_{(aq)} + Cl^-_{(aq)}\). The presence of hydroxonium ions (\(H_3O^+\)) gives the solution its acidic properties.</li>
+                        <li><strong>In Non-Polar Solvents (like Methylbenzene):</strong> When \(HCl\) gas is dissolved in a non-polar solvent, it remains as simple molecules. No ionization occurs, so there are no free hydrogen ions to give the solution acidic properties. It will not react with metals or turn litmus paper red.</li>
+                    </ul>
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mt-6 rounded-md">
+                        <p class="font-bold">Safety Note</p>
+                        <p>Methylbenzene (toluene) is volatile and poisonous. All experiments involving it must be conducted in a fume hood.</p>
+                    </div>
+                </section>
+
+                <section id="amphoteric" class="slide">
+                     <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Amphoteric Substances</h2>
+                    <p class="mb-4"><strong>Amphoteric oxides and hydroxides</strong> are versatile substances that react with both acids and strong alkalis.</p>
+                    <p>Common examples are oxides/hydroxides of Zinc (\(Zn\)), Aluminium (\(Al\)), and Lead (\(Pb\)).</p>
+                    <p class="mt-4"><strong>Reaction with Acid (acting as a base):</strong></p>
+                    <p class="ml-4 bg-gray-100 p-2 rounded">\(ZnO_{(s)} + 2H^+_{(aq)} \rightarrow Zn^{2+}_{(aq)} + H_2O_{(l)}\)</p>
+                    <p class="mt-4"><strong>Reaction with a Strong Alkali (acting as an acid):</strong></p>
+                    <p class="ml-4 bg-gray-100 p-2 rounded">\(ZnO_{(s)} + 2OH^-_{(aq)} + H_2O_{(l)} \rightarrow [Zn(OH)_4]^{2-}_{(aq)}\) (Tetrahydroxozincate(II) ion)</p>
+                </section>
+
+                <section id="salts" class="slide">
+                    <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Salts and Solubility</h2>
+                    <h3 class="text-xl font-semibold mt-6 mb-2">Determining Solubility</h3>
+                    <p><strong>Solubility</strong> is the maximum mass of a solute that dissolves in 100 g of a solvent at a specific temperature to form a saturated solution.</p>
+                    <details class="mt-4"><summary>Worked Example: Calculating Solubility</summary>
+                        <div class="prose">
+                          <p>A saturated solution of a salt weighs 80g. After evaporating the water, the mass of the dry salt is 30g. Calculate the solubility of the salt.</p>
+                           <p><strong>Answer:</strong></p>
+                           <p>1. <strong>Find the mass of the solvent (water):</strong><br> Mass of solvent = 80g - 30g = 50g.</p>
+                           <p>2. <strong>Calculate solubility per 100g of water:</strong><br> Solubility = \( \left( \frac{30 \text{ g}}{50 \text{ g}} \right) \times 100 = 60 \text{ g/100 g of water}\)</p>
+                        </div>
+                    </details>
+                    <h3 class="text-xl font-semibold mt-6 mb-2">Solubility Curves and Fractional Crystallisation</h3>
+                    <p>A <strong>solubility curve</strong> graphically represents how solubility changes with temperature. This is applied in <strong>fractional crystallisation</strong> to separate a mixture of salts. When a hot, concentrated solution of the mixture cools, the salt that is less soluble at lower temperatures will crystallise out first.</p>
+                    <div class="my-6 p-4 border rounded-lg text-center bg-gray-100">
+                        <p class="text-gray-600 italic">[Diagram: Solubility curve for KNO₃ (steeply rising) and NaCl (relatively flat)]</p>
+                    </div>
+                </section>
+                
+                <section id="hardness" class="slide">
+                    <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Water Hardness</h2>
+                    <p class="mt-4">Hardness in water is caused by dissolved <strong>Calcium (\(Ca^{2+}\))</strong> and <strong>Magnesium (\(Mg^{2+}\))</strong> ions, which react with soap to form <strong>scum</strong>.</p>
+                     <p class="ml-4 bg-gray-100 p-2 rounded">\(2C_{17}H_{35}COONa_{(aq)} + Ca^{2+}_{(aq)} \rightarrow (C_{17}H_{35}COO)_2Ca_{(s)} + 2Na^+_{(aq)}\)</p>
+                    <h3 class="text-xl font-semibold mt-6 mb-2">Types and Removal of Hardness</h3>
+                    <div class="grid md:grid-cols-2 gap-6 mt-4">
+                        <div class="bg-blue-100 p-4 rounded-lg">
+                            <h4 class="font-bold text-lg">1. Temporary Hardness</h4>
+                            <p><strong>Cause:</strong> Calcium hydrogencarbonate (\(Ca(HCO_3)_2\)).</p>
+                            <p class="mt-2"><strong>Removal by Boiling:</strong> \(Ca(HCO_3)_{2(aq)} \rightarrow CaCO_{3(s)} \downarrow + H_2O_{(l)} + CO_{2(g)}\)</p>
+                        </div>
+                        <div class="bg-green-100 p-4 rounded-lg">
+                            <h4 class="font-bold text-lg">2. Permanent Hardness</h4>
+                            <p><strong>Cause:</strong> Calcium sulphate (\(CaSO_4\)) etc.</p>
+                            <p class="mt-2"><strong>Removal by Na₂CO₃:</strong> \(CaSO_{4(aq)} + Na_2CO_{3(aq)} \rightarrow CaCO_{3(s)} \downarrow + Na_2SO_{4(aq)}\)</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="experiments" class="slide">
+                    <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Key Experiments</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Experiment 1.2: Comparing pH and Electrical Conductivity</h3>
+                            <p><strong>Objective:</strong> To compare the strength of different acids.</p>
+                            <p><strong>Procedure:</strong> A universal indicator is added to solutions of 2M HCl and 2M CH₃COOH to measure pH. The electrical conductivity of each solution is measured using an ammeter.</p>
+                            <p><strong>Observations:</strong> HCl solution has a lower pH and causes a larger deflection on the ammeter than the CH₃COOH solution.</p>
+                            <p><strong>Conclusion:</strong> HCl is a stronger acid because it ionizes more completely, producing a higher concentration of H⁺ ions.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Experiment 1.4: Hydrogen Chloride in Different Solvents</h3>
+                            <p><strong>Objective:</strong> To investigate the role of the solvent in acidic character.</p>
+                            <p><strong>Procedure:</strong> HCl gas is dissolved separately in water (a polar solvent) and methylbenzene (a non-polar solvent). Both solutions are tested with litmus paper and by adding a piece of magnesium ribbon.</p>
+                            <p><strong>Observations:</strong> The aqueous solution turns blue litmus red and reacts with magnesium to produce effervescence. The methylbenzene solution shows no reaction.</p>
+                            <p><strong>Conclusion:</strong> Water is required for HCl to ionize and exhibit acidic properties.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">Experiment 1.7: Determining Solubility of a Salt</h3>
+                            <p><strong>Objective:</strong> To measure the solubility of a salt (e.g., KClO₃) at a specific temperature.</p>
+                            <p><strong>Procedure:</strong> A saturated solution is prepared. A known mass of the saturated solution is weighed, then evaporated to dryness. The mass of the remaining dry salt is measured.</p>
+                            <p><strong>Calculation:</strong> Mass of water = (Mass of solution) - (Mass of dry salt). Solubility (g/100g water) = (Mass of dry salt / Mass of water) x 100.</p>
+                        </div>
+                        <div>
+                             <h3 class="text-xl font-semibold mb-2">Experiment 1.12: Investigating Water Hardness</h3>
+                            <p><strong>Objective:</strong> To compare the effect of different dissolved salts on the lathering of soap.</p>
+                            <p><strong>Procedure:</strong> A standard volume of soap solution is added drop by drop to different water samples (distilled, tap, and solutions of various salts like MgCl₂ and Ca(HCO₃)₂) until a persistent lather is formed. The volume of soap required is recorded.</p>
+                             <p><strong>Observations:</strong> Distilled water lathers easily with very little soap. Water containing Ca²⁺ and Mg²⁺ ions requires a large volume of soap and forms scum.</p>
+                             <p><strong>Conclusion:</strong> Ca²⁺ and Mg²⁺ ions cause water hardness.</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <section id="revision" class="slide">
+                    <h2 class="text-3xl font-semibold mb-4 pb-2 border-b">Revision Questions</h2>
+                    <p class="mb-6">Test your understanding with these 30 revision questions.</p>
+                    <div class="space-y-4">
+                        <details><summary>1. What is observed when magnesium reacts with dilute acids?</summary><div><p>Effervescence (fizzing) is observed, indicating a gas is produced.</p></div></details>
+                        <details><summary>2. Why must a magnesium strip be cleaned before reacting it with acid?</summary><div><p>To remove the protective outer layer of magnesium oxide (\(MgO\)), which would slow down or prevent the reaction.</p></div></details>
+                        <details><summary>3. What is the general word equation for the reaction between an active metal and a dilute acid?</summary><div><p>Metal + Dilute Acid → Salt + Hydrogen Gas.</p></div></details>
+                        <details><summary>4. How is the strength of an acid related to its pH value?</summary><div><p>The stronger the acid, the lower its pH value.</p></div></details>
+                        <details><summary>5. How does the electrical conductivity of an acid relate to its strength?</summary><div><p>A stronger acid has a higher electrical conductivity because it produces more ions in solution.</p></div></details>
+                        <details><summary>6. Which is stronger: 2M hydrochloric acid or 2M ethanoic acid? Explain why.</summary><div><p>Hydrochloric acid is stronger. It ionizes completely in water, producing a higher concentration of \(H^+\) ions, resulting in a lower pH and higher conductivity compared to ethanoic acid, which only ionizes partially.</p></div></details>
+                        <details><summary>7. Compare the pH values of 2M sodium hydroxide and 2M ammonia solution.</summary><div><p>Sodium hydroxide solution has a higher pH value than ammonia solution.</p></div></details>
+                        <details><summary>8. What explains the difference in strength between sodium hydroxide and ammonia solution?</summary><div><p>Sodium hydroxide is a strong alkali that dissociates completely in water to produce a high concentration of \(OH^-\) ions. Ammonia is a weak base that only partially reacts with water to produce a lower concentration of \(OH^-\) ions.</p></div></details>
+                        <details><summary>9. What is observed when dry hydrogen chloride gas is dissolved in methylbenzene and tested with litmus paper?</summary><div><p>There is no observable change on the litmus paper because \(HCl\) does not ionize in the non-polar solvent.</p></div></details>
+                        <details><summary>10. Why does an aqueous solution of ammonia affect litmus paper?</summary><div><p>Because ammonia reacts with water to form ammonium ions (\(NH_4^+\)) and hydroxide ions (\(OH^-\)). The hydroxide ions are responsible for turning red litmus paper blue.</p></div></details>
+                        <details><summary>11. Why does dry solid calcium hydroxide not affect dry litmus paper?</summary><div><p>In the solid state, the ions in calcium hydroxide are held in a crystal lattice and are not free to move. There are no free \(OH^-\) ions to cause a color change.</p></div></details>
+                        <details><summary>12. Name a cation that forms an insoluble chloride.</summary><div><p>Lead(II) (\(Pb^{2+}\)) and Silver (\(Ag^+\)) ions form insoluble chlorides.</p></div></details>
+                        <details><summary>13. Name two examples of insoluble sulphates.</summary><div><p>Barium sulphate (\(BaSO_4\)) and lead(II) sulphate (\(PbSO_4\)).</p></div></details>
+                        <details><summary>14. Which three metal hydroxides are amphoteric and dissolve in excess sodium hydroxide solution?</summary><div><p>Zinc hydroxide (\(Zn(OH)_2\)), aluminium hydroxide (\(Al(OH)_3\)), and lead(II) hydroxide (\(Pb(OH)_2\)).</p></div></details>
+                        <details><summary>15. Which common metal precipitate dissolves in excess ammonia solution to form a deep blue solution?</summary><div><p>Copper(II) hydroxide (\(Cu(OH)_2\)).</p></div></details>
+                        <details><summary>16. Define solubility.</summary><div><p>Solubility is the maximum mass of a solute that dissolves in 100 g of water to form a saturated solution at a specific temperature.</p></div></details>
+                        <details><summary>17. How does the solubility of most solid salts change with temperature?</summary><div><p>The solubility of most solid salts increases as the temperature increases.</p></div></details>
+                        <details><summary>18. What is fractional crystallisation?</summary><div><p>It is a method used to separate a mixture of soluble salts by taking advantage of their different solubilities at different temperatures.</p></div></details>
+                        <details><summary>19. Define hard water.</summary><div><p>Hard water is water that does not lather readily with soap due to the presence of dissolved \(Ca^{2+}\) and/or \(Mg^{2+}\) ions.</p></div></details>
+                        <details><summary>20. What is the chemical name for scum?</summary><div><p>Scum is an insoluble precipitate, typically calcium stearate or magnesium stearate, formed from the reaction between soap and hard water ions.</p></div></details>
+                        <details><summary>21. How can temporary hardness of water be removed?</summary><div><p>By boiling the water, which causes the dissolved calcium hydrogencarbonate to precipitate as calcium carbonate.</p></div></details>
+                        <details><summary>22. Write an equation for the removal of temporary hardness by boiling.</summary><div><p>\(Ca(HCO_3)_2(aq) \rightarrow CaCO_3(s) + H_2O(l) + CO_2(g)\)</p></div></details>
+                        <details><summary>23. Name one method for removing permanent hardness of water.</summary><div><p>Using an ion exchanger or adding washing soda (sodium carbonate).</p></div></details>
+                        <details><summary>24. In the reaction \(NH_{3(g)} + H_2O_{(l)} \rightleftharpoons NH_{4(aq)}^+ + OH^-_{(aq)}\), which substance acts as a base?</summary><div><p>Ammonia (\(NH_3\)) acts as a base because it accepts a proton (\(H^+\)) from water.</p></div></details>
+                        <details><summary>25. Define a salt.</summary><div><p>A salt is an ionic compound formed when the hydrogen ion of an acid is partially or completely replaced by a metal ion or an ammonium ion (\(NH_4^+\)).</p></div></details>
+                        <details><summary>26. Name a salt that can be prepared by precipitation.</summary><div><p>Lead(II) chloride (\(PbCl_2\)), silver chloride (\(AgCl\)), or barium sulphate (\(BaSO_4\)).</p></div></details>
+                        <details><summary>27. Briefly describe how to prepare an insoluble salt like lead(II) sulphate.</summary><div><p>By mixing two suitable soluble solutions, one containing lead(II) ions (e.g., lead(II) nitrate) and the other containing sulphate ions (e.g., sodium sulphate). The insoluble lead(II) sulphate forms as a precipitate, which can then be filtered, washed, and dried.</p></div></details>
+                        <details><summary>28. What is a base according to the Brønsted-Lowry theory?</summary><div><p>A Brønsted-Lowry base is a proton (\(H^+\)) acceptor.</p></div></details>
+                        <details><summary>29. What is an acid according to the Brønsted-Lowry theory?</summary><div><p>A Brønsted-Lowry acid is a proton (\(H^+\)) donor.</p></div></details>
+                        <details><summary>30. What is the pH of a neutral solution at 25°C?</summary><div><p>The pH of a neutral solution is 7.</p></div></details>
+                    </div>
+                </section>
+                
+                 <!-- Navigation Buttons Container -->
+                <div id="navigation-buttons" class="mt-8 flex justify-between flex-shrink-0">
+                    <a href="#" id="prev-button" class="nav-button">&larr; Previous</a>
+                    <a href="#" id="next-button" class="nav-button">Next &rarr;</a>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Slide Navigation Logic ---
+            const slides = document.querySelectorAll('.slide');
+            const sideNavLinks = document.querySelectorAll('#side-nav a');
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+            const mainContent = document.querySelector('.main-content');
+            const breadcrumb = document.getElementById('breadcrumb');
+            let currentSlide = 0;
+
+            function showSlide(index) {
+                if(index < 0 || index >= slides.length) return;
+
+                // Hide current slide
+                if(slides[currentSlide]) slides[currentSlide].classList.remove('is-active');
+                
+                // Show new slide
+                slides[index].classList.add('is-active');
+                
+                // Update active link in side nav
+                if(sideNavLinks[currentSlide]) sideNavLinks[currentSlide].classList.remove('is-active-link');
+                if(sideNavLinks[index]) sideNavLinks[index].classList.add('is-active-link');
+
+                // Update breadcrumb
+                const slideTitle = slides[index].querySelector('h2').textContent;
+                breadcrumb.innerHTML = `<a href="#" class="text-blue-600 hover:underline" onclick="showSlide(0); return false;">Home</a> &raquo; <span>${slideTitle}</span>`;
+
+
+                currentSlide = index;
+                mainContent.scrollTop = 0; // Scroll to top of new slide
+                updateNavButtons();
+            }
+
+            window.showSlide = showSlide; // Make showSlide globally accessible for inline onclick
+
+            function updateNavButtons() {
+                // Previous button
+                if (currentSlide === 0) {
+                    prevButton.classList.add('nav-button-disabled');
+                } else {
+                    prevButton.classList.remove('nav-button-disabled');
+                }
+                // Next button
+                if (currentSlide === slides.length - 1) {
+                    nextButton.textContent = 'End';
+                    nextButton.classList.add('nav-button-disabled');
+                } else {
+                    nextButton.textContent = 'Next \u2192';
+                    nextButton.classList.remove('nav-button-disabled');
+                }
+            }
+
+            prevButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentSlide > 0) {
+                    showSlide(currentSlide - 1);
+                }
+            });
+
+            nextButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (currentSlide < slides.length - 1) {
+                    showSlide(currentSlide + 1);
+                }
+            });
+
+            sideNavLinks.forEach((link, index) => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showSlide(index);
+                    closeHamburgerMenu(); // Close mobile menu on link click
+                });
+            });
+
+            // --- Hamburger Menu Logic ---
+            const hamburgerBtn = document.getElementById('hamburger-button');
+            const sideNav = document.getElementById('side-nav');
+            const navOverlay = document.getElementById('nav-overlay');
+
+            function toggleHamburgerMenu() {
+                sideNav.classList.toggle('is-active');
+                navOverlay.classList.toggle('is-active');
+            }
+             function closeHamburgerMenu() {
+                sideNav.classList.remove('is-active');
+                navOverlay.classList.remove('is-active');
+            }
+
+            hamburgerBtn.addEventListener('click', toggleHamburgerMenu);
+            navOverlay.addEventListener('click', toggleHamburgerMenu);
+
+            // --- Initial Setup ---
+            showSlide(0);
+        });
+    </script>
+</body>
+</html>
